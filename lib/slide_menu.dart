@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart'; // Add this import for Clipboard functionality
+import 'package:flutter/services.dart'; // สำหรับ Clipboard functionality
+import 'package:share_plus/share_plus.dart'; // สำหรับการแชร์ลิงก์
 import 'package:sumhua_project/function/user_list_screen.dart';
 import 'package:sumhua_project/function/room_chat.dart';
 
@@ -101,6 +102,8 @@ class _SlideMenuState extends State<SlideMenu> {
                                 .delete();
                           } else if (value == 'View ID') {
                             _showMenuItemIdDialog(menuItem.id);
+                          } else if (value == 'Share') {
+                            _showShareLinkDialog(menuItem.id);
                           }
                         },
                         itemBuilder: (BuildContext context) {
@@ -118,6 +121,10 @@ class _SlideMenuState extends State<SlideMenu> {
                             PopupMenuItem(
                               value: 'View ID',
                               child: Text('ดูเลข ID'),
+                            ),
+                            PopupMenuItem(
+                              value: 'Share',
+                              child: Text('แชร์ลิงก์'),
                             ),
                           ];
                         },
@@ -236,7 +243,12 @@ class _SlideMenuState extends State<SlideMenu> {
                 usersCollection
                     .doc(userId)
                     .collection('menuItems')
-                    .add(newItem);
+                    .add(newItem)
+                    .then((docRef) {
+                  // หลังจากสร้าง Menu Item ใหม่เสร็จสิ้น
+                  _showShareLinkDialog(
+                      docRef.id); // แสดงลิงก์ของ Menu Item ที่สร้าง
+                });
                 Navigator.of(context).pop();
               },
             ),
@@ -248,6 +260,7 @@ class _SlideMenuState extends State<SlideMenu> {
 
   void _showJoinMenuItemDialog() {
     TextEditingController _idController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -272,41 +285,47 @@ class _SlideMenuState extends State<SlideMenu> {
             TextButton(
               child: Text('Join'),
               onPressed: () async {
-                final menuItemId = _idController.text.trim();
-                if (menuItemId.isNotEmpty) {
+                final String menuItemId = _idController.text.trim();
+
+                if (menuItemId.isNotEmpty && menuItemId.length > 0) {
                   try {
-                    // ค้นหา Menu Item ที่มี id ตรงกันในคอลเลกชันของ User1 (ID ของ User1)
-                    final menuItemDoc = await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc('User1ID') // ใส่ ID ของ User1 ตรงนี้
-                        .collection('menuItems')
-                        .doc(menuItemId)
+                    // การค้นหา Menu Item โดยใช้ FieldPath.documentId
+                    final QuerySnapshot menuItemDocs = await FirebaseFirestore
+                        .instance
+                        .collectionGroup('menuItems')
+                        .where(FieldPath.documentId, isEqualTo: menuItemId)
                         .get();
 
-                    if (menuItemDoc.exists) {
-                      final menuItemData = menuItemDoc.data();
+                    if (menuItemDocs.docs.isNotEmpty) {
+                      // ดำเนินการหากพบ Menu Item
+                      final menuItemData = menuItemDocs.docs.first.data()
+                          as Map<String, dynamic>;
 
-                      // เพิ่ม Menu Item ให้กับ User2
-                      await usersCollection
-                          .doc(userId) // User2's document ID
+                      // เพิ่ม Menu Item ให้กับ User ปัจจุบัน
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
                           .collection('menuItems')
                           .doc(menuItemId)
-                          .set(menuItemData!, SetOptions(merge: true));
-
-                      Navigator.of(context).pop();
+                          .set(menuItemData, SetOptions(merge: true));
                     } else {
-                      // หากไม่เจอ Menu Item
+                      // หากไม่พบ Menu Item
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Menu Item not found')),
                       );
                     }
                   } catch (e) {
-                    // จัดการกับข้อผิดพลาดที่เกิดขึ้น
+                    // แสดงข้อผิดพลาด
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('An error occurred: ${e.toString()}')),
+                      SnackBar(content: Text('An error occurred: $e')),
                     );
                   }
+                } else {
+                  // หากไม่มีการกรอก ID
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Please enter a valid Menu Item ID')),
+                  );
                 }
               },
             ),
@@ -316,27 +335,76 @@ class _SlideMenuState extends State<SlideMenu> {
     );
   }
 
-  void _showMenuItemIdDialog(String itemId) {
+  void _showMenuItemIdDialog(String menuItemId) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Menu Item ID'),
-          content: Text('ID: $itemId'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(menuItemId),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text('Copy'),
+              child: Text('Copy ID'),
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: itemId));
+                Clipboard.setData(ClipboardData(
+                    text: menuItemId)); // คัดลอก ID ไปยังคลิปบอร์ด
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('ID copied to clipboard')),
+                  SnackBar(content: Text('ID copied to clipboard!')),
                 );
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showShareLinkDialog(String menuItemId) {
+    final shareLink =
+        'https://sumhua.com/menuItem/$menuItemId'; // ลิงก์ที่สามารถแชร์ได้
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Share Menu Item'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Share this link:'),
+              SelectableText(
+                  shareLink), // ใช้ SelectableText เพื่อให้ผู้ใช้คัดลอกลิงก์
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Copy Link'),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(
+                    text: shareLink)); // คัดลอกลิงก์ไปยังคลิปบอร์ด
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Link copied to clipboard!')),
+                );
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Share'),
+              onPressed: () {
+                Share.share(
+                    'Check out this menu item: $shareLink'); // แชร์ลิงก์
               },
             ),
           ],

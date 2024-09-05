@@ -34,6 +34,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
         .collection(widget.menuItemName)
         .get();
 
+    if (!mounted) return; // ตรวจสอบว่า widget ยังคงอยู่ใน tree หรือไม่
+
     setState(() {
       chatRooms = querySnapshot.docs.map((doc) => doc['name'].toString()).toList();
     });
@@ -70,6 +72,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     'name': _textFieldController.text,
                     'createdAt': Timestamp.now(),
                   });
+
+                  if (!mounted) return; // ตรวจสอบว่า widget ยังคงอยู่ใน tree ก่อนที่จะอัปเดต
 
                   setState(() {
                     chatRooms.add(_textFieldController.text); // Add the new Chat Room to the list
