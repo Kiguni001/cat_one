@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "887332751087",
+    "firebase_url": "https://newsumhua-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "newsumhua",
+    "storage_bucket": "newsumhua.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:887332751087:android:36b676b5b8f87e70f1bd1a",
+        "android_client_info": {
+          "package_name": "com.project.appsumhua"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd2fsTOtISy2gE8oL6TW5Z-4D59FWBii8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

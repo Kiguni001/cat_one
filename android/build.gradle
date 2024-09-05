@@ -1,0 +1,31 @@
+buildscript {
+    ext.kotlin_version = '1.9.0' // ใส่เวอร์ชันล่าสุดของ Kotlin
+    repositories {
+        google() // Add this line
+        mavenCentral() // Add this line
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:7.0.2' // Ensure you have the correct version
+        classpath 'com.google.gms:google-services:4.3.10' // Add this line, check for the latest version
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
