@@ -34,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showError(String message) {
+    if (!mounted) return; // ตรวจสอบว่า widget ยังคงอยู่ใน tree หรือไม่
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
