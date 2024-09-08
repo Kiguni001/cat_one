@@ -16,9 +16,8 @@ class _SlideMenuState extends State<SlideMenu> {
   String? userId;
 
   Future<List<DocumentSnapshot>> _getJoinedMenuItems(String userId) async {
-    QuerySnapshot classmenuitemSnapshot = await FirebaseFirestore.instance
-        .collection('classmenuitem')
-        .get();
+    QuerySnapshot classmenuitemSnapshot =
+        await FirebaseFirestore.instance.collection('classmenuitem').get();
 
     List<DocumentSnapshot> joinedMenuItems = [];
 
@@ -78,7 +77,9 @@ class _SlideMenuState extends State<SlideMenu> {
           ),
           Expanded(
             child: FutureBuilder<List<DocumentSnapshot>>(
-              future: userId != null ? _getJoinedMenuItems(userId!) : Future.value([]),
+              future: userId != null
+                  ? _getJoinedMenuItems(userId!)
+                  : Future.value([]),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -117,10 +118,8 @@ class _SlideMenuState extends State<SlideMenu> {
                                 .doc(menuItem.id)
                                 .update({'muted': !isMuted});
                           } else if (value == 'Delete') {
-                            await FirebaseFirestore.instance
-                                .collection('classmenuitem')
-                                .doc(menuItem.id)
-                                .delete();
+                            // เปลี่ยนจาก user.uid เป็น userId
+                            _deleteMenuItem(menuItem, userId!);
                           } else if (value == 'View ID') {
                             _showMenuItemIdDialog(menuItem.id);
                           }
@@ -129,9 +128,7 @@ class _SlideMenuState extends State<SlideMenu> {
                           return [
                             PopupMenuItem(
                               value: 'Mute',
-                              child: Text(isMuted
-                                  ? 'เปิดการแจ้งเตือนเมนูนี้'
-                                  : 'ปิดการแจ้งเตือนเมนูนี้'),
+                              child: Text(isMuted ? 'Unmute' : 'Mute'),
                             ),
                             PopupMenuItem(
                               value: 'Delete',
@@ -139,11 +136,10 @@ class _SlideMenuState extends State<SlideMenu> {
                             ),
                             PopupMenuItem(
                               value: 'View ID',
-                              child: Text('ดูเลข ID'),
+                              child: Text('ดูรหัสเมนู'),
                             ),
                           ];
                         },
-                        icon: Icon(Icons.more_vert),
                       ),
                       onTap: () {
                         Navigator.of(context).push(
@@ -285,6 +281,17 @@ class _SlideMenuState extends State<SlideMenu> {
                     'role': 'admin',
                   });
 
+                  // สร้าง collection chatroom และ audioroom พร้อม document ชื่อ Chat และ Audio
+                  await docRef.collection('chatroom').doc('Chat').set({
+                    'name': 'Chat',
+                    'createdAt': Timestamp.now(),
+                  });
+
+                  await docRef.collection('audioroom').doc('Audio').set({
+                    'name': 'Audio',
+                    'createdAt': Timestamp.now(),
+                  });
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Menu Item created successfully!')),
                   );
@@ -316,7 +323,16 @@ class _SlideMenuState extends State<SlideMenu> {
             children: [
               TextField(
                 controller: _idController,
-                decoration: InputDecoration(hintText: "Enter Menu Item ID"),
+                decoration: InputDecoration(hintText: "Enter menu item ID"),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Clipboard.getData(Clipboard.kTextPlain).then((value) {
+                    _idController.text = value?.text ?? '';
+                  });
+                },
+                child: Text('Paste ID from Clipboard'),
               ),
             ],
           ),
@@ -331,95 +347,50 @@ class _SlideMenuState extends State<SlideMenu> {
               child: Text('Join'),
               onPressed: () async {
                 final String menuItemId = _idController.text.trim();
-
-                if (menuItemId.isNotEmpty) {
-                  try {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please log in first')),
-                      );
-                      return;
-                    }
-
-                    await joinGroup(menuItemId, user.uid,
-                        user.displayName ?? 'Unknown User');
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('An error occurred: $e')),
-                    );
-                  }
-                  Navigator.of(context).pop();
-                } else {
+                if (menuItemId.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Please enter a valid Menu Item ID')),
+                    SnackBar(content: Text('Please enter a menu item ID')),
+                  );
+                  return;
+                }
+
+                final User? user = FirebaseAuth.instance.currentUser;
+                if (user == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please log in first')),
+                  );
+                  return;
+                }
+
+                try {
+                  // เข้าร่วม Menu Item โดยเพิ่มข้อมูลลงใน subcollection role
+                  final menuItemRef = FirebaseFirestore.instance
+                      .collection('classmenuitem')
+                      .doc(menuItemId);
+
+                  final roleRef = menuItemRef.collection('role').doc(user.uid);
+                  await roleRef.set({
+                    'username': user.displayName ?? 'Unknown User',
+                    'userId': user.uid,
+                    'role': 'member',
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Successfully joined Menu Item!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to join Menu Item: $e')),
                   );
                 }
+
+                Navigator.of(context).pop();
               },
             ),
           ],
         );
       },
     );
-  }
-
-  Future<void> joinGroup(
-      String menuItemId, String userId, String userName) async {
-    try {
-      if (menuItemId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please enter a valid Menu Item ID')),
-        );
-        return;
-      }
-
-      // เข้าถึง Menu Item โดยตรง
-      final menuItemDoc = await FirebaseFirestore.instance
-          .collection('classmenuitem')
-          .doc(menuItemId)
-          .get();
-
-      if (menuItemDoc.exists) {
-        final roleDoc = menuItemDoc.reference.collection('role').doc(userId);
-        final roleSnapshot = await roleDoc.get();
-
-        if (roleSnapshot.exists) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('You have already joined this group.')),
-          );
-        } else {
-          // เพิ่มผู้ใช้ใน subcollection role เป็น member
-          await roleDoc.set({
-            'username': userName,
-            'userId': userId,
-            'role': 'member',
-          });
-
-          // อัปเดตข้อมูล Menu Item ของผู้ใช้ใน collection users (ถ้ายังคงต้องการ)
-          // สามารถเพิ่มได้ตามต้องการ เช่น ถ้าต้องการให้ข้อมูล Menu Item อยู่ใน collection ของผู้ใช้
-          // await FirebaseFirestore.instance
-          //     .collection('users')
-          //     .doc(userId)
-          //     .collection('menuItems')
-          //     .doc(menuItemId)
-          //     .set(menuItemDoc.data() as Map<String, dynamic>, SetOptions(merge: true));
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Successfully joined the group!')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Menu Item not found')),
-        );
-      }
-    } catch (e) {
-      print('Error joining group: $e'); // Log error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $e')),
-      );
-    }
   }
 
   void _showMenuItemIdDialog(String menuItemId) {
@@ -428,25 +399,19 @@ class _SlideMenuState extends State<SlideMenu> {
       builder: (context) {
         return AlertDialog(
           title: Text('Menu Item ID'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(menuItemId),
-            ],
-          ),
+          content: Text(menuItemId),
           actions: <Widget>[
             TextButton(
               child: Text('Copy ID'),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: menuItemId));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('ID copied to clipboard!')),
+                  SnackBar(content: Text('Menu Item ID copied to clipboard')),
                 );
-                Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('OK'),
+              child: Text('Close'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -455,5 +420,28 @@ class _SlideMenuState extends State<SlideMenu> {
         );
       },
     );
+  }
+
+  void _deleteMenuItem(DocumentSnapshot menuItem, String userId) async {
+    try {
+      final menuItemRef =
+          FirebaseFirestore.instance.collection('classmenuitem').doc(menuItem.id);
+      final roleDoc = await menuItemRef.collection('role').doc(userId).get();
+
+      if (roleDoc.exists && roleDoc.data()?['role'] == 'admin') {
+        await menuItemRef.delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Menu Item deleted successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You do not have permission to delete this Menu Item')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete Menu Item: $e')),
+      );
+    }
   }
 }
