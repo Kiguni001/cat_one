@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart'; // For Clipboard functionality
 import 'package:sumhua_project/function/user_list_screen.dart';
 import 'package:sumhua_project/function/room_chat.dart';
+import 'package:sumhua_project/profile_setting.dart'; // สมมติว่าไฟล์ชื่อ profile_setting.dart
+
 
 class SlideMenu extends StatefulWidget {
   @override
@@ -178,12 +180,18 @@ class _SlideMenuState extends State<SlideMenu> {
                 IconButton(
                   icon: Column(
                     children: [
-                      Icon(Icons.warehouse, color: Colors.blue),
-                      Text('คลังไฟล์', style: TextStyle(fontSize: 12))
+                      Icon(Icons.person, color: Colors.blue), // ไอคอน Profile
+                      Text('Profile', style: TextStyle(fontSize: 12))
                     ],
                   ),
                   onPressed: () {
-                    // Add functionality for file storage button here
+                    // เพิ่มการนำทางไปยังหน้า ProfileSettingPage
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ProfileSettingPage(), // สมมติว่า ProfileSettingPage คือคลาสใน profile_setting.dart
+                      ),
+                    );
                   },
                 ),
               ],
@@ -424,8 +432,9 @@ class _SlideMenuState extends State<SlideMenu> {
 
   void _deleteMenuItem(DocumentSnapshot menuItem, String userId) async {
     try {
-      final menuItemRef =
-          FirebaseFirestore.instance.collection('classmenuitem').doc(menuItem.id);
+      final menuItemRef = FirebaseFirestore.instance
+          .collection('classmenuitem')
+          .doc(menuItem.id);
       final roleDoc = await menuItemRef.collection('role').doc(userId).get();
 
       if (roleDoc.exists && roleDoc.data()?['role'] == 'admin') {
@@ -435,7 +444,9 @@ class _SlideMenuState extends State<SlideMenu> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You do not have permission to delete this Menu Item')),
+          SnackBar(
+              content:
+                  Text('You do not have permission to delete this Menu Item')),
         );
       }
     } catch (e) {

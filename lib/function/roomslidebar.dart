@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sumhua_project/function/groupchat.dart';
+import 'package:sumhua_project/function/user_list_screen.dart';
 
 class RoomSlideBar extends StatefulWidget {
   final String menuItemName;
@@ -17,7 +19,7 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
   late String menuItemId;
   late String userId;
   String userRole = '';
-  List<String> chatRooms = [];
+  List<Map<String, dynamic>> chatRooms = [];
   List<String> audioRooms = [];
 
   @override
@@ -69,10 +71,20 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
           .collection('audioroom')
           .get();
 
-      setState(() {
-        chatRooms = chatroomSnapshot.docs.map((doc) => doc['name'] as String).toList();
-        audioRooms = audioroomSnapshot.docs.map((doc) => doc['name'] as String).toList();
-      });
+      if (mounted) {
+        setState(() {
+          chatRooms = chatroomSnapshot.docs
+              .map((doc) => {
+                    'name': doc['name'],
+                    'id': doc.id,
+                  })
+              .toList();
+
+          audioRooms = audioroomSnapshot.docs
+              .map((doc) => doc['name'] as String)
+              .toList();
+        });
+      }
     }
   }
 
@@ -108,14 +120,23 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
               children: <Widget>[
                 // เพิ่มปุ่ม Chat Friend และ Setting ด้านบนปุ่ม Add Room
                 ListTile(
-                  leading: Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
+                  leading:
+                      Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
                   title: Text('Chat Friend'),
                   onTap: () {
-                    // Action เมื่อกด Chat Friend
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            UserListScreen(), // เปิดหน้า UserListScreen
+                      ),
+                    );
                   },
                 ),
+
                 ListTile(
-                  leading: Icon(Icons.settings, color: Colors.grey), // ไอคอน Settings
+                  leading: Icon(Icons.settings,
+                      color: Colors.grey), // ไอคอน Settings
                   title: Text('Settings'),
                   onTap: () {
                     // Action เมื่อกด Settings
@@ -136,15 +157,26 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     children: [
                       Text(
                         'Chat Rooms:',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      ...chatRooms.map((roomName) => ListTile(
-                        title: Text(roomName),
-                        trailing: Icon(Icons.chat),
-                        onTap: () {
-                          // Handle chat room tap
-                        },
-                      )).toList(),
+                      ...chatRooms
+                          .map((room) => ListTile(
+                                title: Text(room['name']), // ชื่อของห้องแชท
+                                trailing: Icon(Icons.chat),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => GroupChatPage(
+                                        documentId: room[
+                                            'id'], // ใช้ documentId ที่ถูกส่ง
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ))
+                          .toList(),
                     ],
                   ),
                 ),
@@ -156,15 +188,18 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     children: [
                       Text(
                         'Audio Rooms:',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      ...audioRooms.map((roomName) => ListTile(
-                        title: Text(roomName),
-                        trailing: Icon(Icons.volume_up),
-                        onTap: () {
-                          // Handle audio room tap
-                        },
-                      )).toList(),
+                      ...audioRooms
+                          .map((roomName) => ListTile(
+                                title: Text(roomName),
+                                trailing: Icon(Icons.volume_up),
+                                onTap: () {
+                                  // Handle audio room tap
+                                },
+                              ))
+                          .toList(),
                     ],
                   ),
                 ),
@@ -219,7 +254,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}'),
+          title: Text(
+              'Create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}'),
           content: TextField(
             controller: _nameController,
             decoration: InputDecoration(hintText: "Enter room name"),
@@ -255,14 +291,18 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                   });
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'} created successfully')),
+                    SnackBar(
+                        content: Text(
+                            '${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'} created successfully')),
                   );
 
                   // Refresh the list of rooms after creating a new one
                   await _initialize();
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}: $e')),
+                    SnackBar(
+                        content: Text(
+                            'Failed to create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}: $e')),
                   );
                 }
 
