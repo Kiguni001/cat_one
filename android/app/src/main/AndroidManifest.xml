@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.project.appsumhua"> <!-- เพิ่ม package ที่นี่ -->
+
+    <!-- เพิ่ม permission ที่นี่ -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="sumhua_project"
         android:name="${applicationName}"
@@ -25,6 +30,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />

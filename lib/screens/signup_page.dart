@@ -22,27 +22,37 @@ class _SignupPageState extends State<SignupPage> {
     final phone = _phoneController.text.trim();
     final email = _emailController.text.trim();
 
-    if (username.isEmpty || password.isEmpty || phone.isEmpty || email.isEmpty) {
+    if (username.isEmpty ||
+        password.isEmpty ||
+        phone.isEmpty ||
+        email.isEmpty) {
       _showError('Please fill in all fields.');
       return;
     }
 
     try {
       // Check if email or phone number already exists
-      final emailQuery = await _firestore.collection('users').where('email', isEqualTo: email).get();
+      final emailQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
       if (emailQuery.docs.isNotEmpty) {
         _showError('This email is already in use.');
         return;
       }
 
-      final phoneQuery = await _firestore.collection('users').where('phone', isEqualTo: phone).get();
+      final phoneQuery = await _firestore
+          .collection('users')
+          .where('phone', isEqualTo: phone)
+          .get();
       if (phoneQuery.docs.isNotEmpty) {
         _showError('This phone number is already in use.');
         return;
       }
 
       // Create user with Firebase Auth
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -85,40 +95,114 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 48, 47, 50),
       appBar: AppBar(
-        title: Text('Sign Up'),
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          'Sign Up Account',
+          style: TextStyle(
+            color: Colors.white, // สีของข้อความ "Login"
+            fontSize: 20, // ขนาดตัวอักษร (ปรับได้ตามต้องการ)
+            fontWeight: FontWeight.bold, // ทำตัวอักษรหนา (ถ้าต้องการ)
+          ),
+        ),
+        centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Phone Number'),
-              keyboardType: TextInputType.phone,
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-            ),
+            SizedBox(height: 40),
+            _buildLogo(),
+            SizedBox(height: 40),
+            _buildTextField(_usernameController, 'Username', Icons.person),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _registerUser,
-              child: Text('Sign Up'),
-            ),
+            _buildTextField(_emailController, 'Email', Icons.email,
+                keyboardType: TextInputType.emailAddress),
+            SizedBox(height: 20),
+            _buildTextField(_phoneController, 'Phone Number', Icons.phone,
+                keyboardType: TextInputType.phone),
+            SizedBox(height: 20),
+            _buildTextField(_passwordController, 'Password', Icons.lock,
+                obscureText: true),
+            SizedBox(height: 30),
+            _buildSignupButton(),
+            SizedBox(height: 20),
+            _buildLoginOption(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Center(
+      child: CircleAvatar(
+        radius: 50,
+        backgroundImage: AssetImage('assets/SumhuaPro.png'), // เพิ่มโลโก้ของคุณ
+        backgroundColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {TextInputType keyboardType = TextInputType.text,
+      bool obscureText = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+       style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.white),
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignupButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color.fromARGB(
+            119, 55, 71, 79),
+        padding: EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: _registerUser,
+      child:
+          Text('Sign Up', style: TextStyle(fontSize: 18, color: Colors.white)),
+    );
+  }
+
+  Widget _buildLoginOption() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Already have an account?'),
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/login');
+          },
+          child: Text(
+            'Login',
+            style: TextStyle(
+              color: Colors.yellow[800],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -167,9 +167,37 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   children: messages.map((message) {
                     final messageData = message.data() as Map<String, dynamic>;
                     return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(messageData['senderName']
-                            [0]), // ใช้ตัวอักษรตัวแรกของชื่อผู้ส่ง
+                      leading: FutureBuilder<DocumentSnapshot>(
+                        future: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(messageData['senderUID']) // ใช้ senderUID แทน friendUID
+                            .get(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return CircleAvatar(
+                                child: CircularProgressIndicator());
+                          }
+                          if (snapshot.hasError) {
+                            return CircleAvatar(child: Icon(Icons.error));
+                          }
+                          final userData =
+                              snapshot.data!.data() as Map<String, dynamic>?;
+
+                          final profileImageUrl =
+                              userData?['profileImageUrl'] ?? '';
+                          final userName =
+                              userData?['name'] ?? 'Unknown'; // ใช้ชื่อที่ได้รับจาก Firebase
+
+                          return CircleAvatar(
+                            backgroundImage: profileImageUrl.isNotEmpty
+                                ? NetworkImage(profileImageUrl)
+                                : null,
+                            child: profileImageUrl.isEmpty
+                                ? Text(userName.isNotEmpty ? userName[0] : '?')
+                                : null,
+                          );
+                        },
                       ),
                       title: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

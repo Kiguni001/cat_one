@@ -75,9 +75,36 @@ class _FriendChatPageState extends State<FriendChatPage> {
                             : MainAxisAlignment.start,
                         children: [
                           if (!isSender) ...[
-                            CircleAvatar(
-                              backgroundColor: Colors.blueGrey,
-                              child: Text(widget.friendName[0]),
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(widget.friendUID)
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return CircleAvatar(
+                                      child: CircularProgressIndicator());
+                                }
+                                if (snapshot.hasError) {
+                                  return CircleAvatar(child: Icon(Icons.error));
+                                }
+                                final userData = snapshot.data!.data()
+                                    as Map<String, dynamic>?;
+                                final profileImageUrl =
+                                    userData?['profileImageUrl'] ?? '';
+                                final userName =
+                                    userData?['name'] ?? widget.friendName;
+
+                                return CircleAvatar(
+                                  backgroundImage: profileImageUrl.isNotEmpty
+                                      ? NetworkImage(profileImageUrl)
+                                      : null,
+                                  child: profileImageUrl.isEmpty
+                                      ? Text(userName[0])
+                                      : null,
+                                );
+                              },
                             ),
                             SizedBox(width: 10),
                           ],

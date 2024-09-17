@@ -6,7 +6,6 @@ import 'package:sumhua_project/function/user_list_screen.dart';
 import 'package:sumhua_project/function/room_chat.dart';
 import 'package:sumhua_project/profile_setting.dart'; // สมมติว่าไฟล์ชื่อ profile_setting.dart
 
-
 class SlideMenu extends StatefulWidget {
   @override
   _SlideMenuState createState() => _SlideMenuState();
@@ -60,7 +59,7 @@ class _SlideMenuState extends State<SlideMenu> {
             height: 110.0,
             child: DrawerHeader(
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 9, 191, 45),
+                color: Colors.brown,
               ),
               child: Align(
                 alignment: Alignment.topLeft,
@@ -78,83 +77,87 @@ class _SlideMenuState extends State<SlideMenu> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<DocumentSnapshot>>(
-              future: userId != null
-                  ? _getJoinedMenuItems(userId!)
-                  : Future.value([]),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+            child: Container(
+              color:
+                  Colors.grey[200], // ปรับสีพื้นหลังของรายการ Menu Item ที่นี่
+              child: FutureBuilder<List<DocumentSnapshot>>(
+                future: userId != null
+                    ? _getJoinedMenuItems(userId!)
+                    : Future.value([]),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                final menuItems = snapshot.data ?? [];
+                  final menuItems = snapshot.data ?? [];
 
-                return ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: menuItems.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
+                  return ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: menuItems.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return ListTile(
+                          title: Text('Add Menu Item'),
+                          trailing: Icon(Icons.add),
+                          onTap: () {
+                            _showAddMenuOptionDialog();
+                          },
+                        );
+                      }
+
+                      final menuItem = menuItems[index - 1];
+                      final data = menuItem.data() as Map<String, dynamic>?;
+                      final isMuted = data?['muted'] ?? false;
+
                       return ListTile(
-                        title: Text('Add Menu Item'),
-                        trailing: Icon(Icons.add),
+                        title: Text(data?['name'] ?? 'Unnamed Item'),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            if (value == 'Mute') {
+                              await FirebaseFirestore.instance
+                                  .collection('classmenuitem')
+                                  .doc(menuItem.id)
+                                  .update({'muted': !isMuted});
+                            } else if (value == 'Delete') {
+                              // เปลี่ยนจาก user.uid เป็น userId
+                              _deleteMenuItem(menuItem, userId!);
+                            } else if (value == 'View ID') {
+                              _showMenuItemIdDialog(menuItem.id);
+                            }
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return [
+                              PopupMenuItem(
+                                value: 'Mute',
+                                child: Text(isMuted ? 'Unmute' : 'Mute'),
+                              ),
+                              PopupMenuItem(
+                                value: 'Delete',
+                                child: Text('ลบเมนู'),
+                              ),
+                              PopupMenuItem(
+                                value: 'View ID',
+                                child: Text('ดูรหัสเมนู'),
+                              ),
+                            ];
+                          },
+                        ),
                         onTap: () {
-                          _showAddMenuOptionDialog();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  RoomChat(data?['name'] ?? 'Unknown'),
+                            ),
+                          );
                         },
                       );
-                    }
-
-                    final menuItem = menuItems[index - 1];
-                    final data = menuItem.data() as Map<String, dynamic>?;
-                    final isMuted = data?['muted'] ?? false;
-
-                    return ListTile(
-                      title: Text(data?['name'] ?? 'Unnamed Item'),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) async {
-                          if (value == 'Mute') {
-                            await FirebaseFirestore.instance
-                                .collection('classmenuitem')
-                                .doc(menuItem.id)
-                                .update({'muted': !isMuted});
-                          } else if (value == 'Delete') {
-                            // เปลี่ยนจาก user.uid เป็น userId
-                            _deleteMenuItem(menuItem, userId!);
-                          } else if (value == 'View ID') {
-                            _showMenuItemIdDialog(menuItem.id);
-                          }
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            PopupMenuItem(
-                              value: 'Mute',
-                              child: Text(isMuted ? 'Unmute' : 'Mute'),
-                            ),
-                            PopupMenuItem(
-                              value: 'Delete',
-                              child: Text('ลบเมนู'),
-                            ),
-                            PopupMenuItem(
-                              value: 'View ID',
-                              child: Text('ดูรหัสเมนู'),
-                            ),
-                          ];
-                        },
-                      ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                RoomChat(data?['name'] ?? 'Unknown'),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                    },
+                  );
+                },
+              ),
             ),
           ),
           Container(

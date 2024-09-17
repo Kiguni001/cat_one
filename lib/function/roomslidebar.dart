@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sumhua_project/function/groupchat.dart';
 import 'package:sumhua_project/function/user_list_screen.dart';
+import 'package:sumhua_project/function/voice_channel.dart';
 
 class RoomSlideBar extends StatefulWidget {
   final String menuItemName;
@@ -14,8 +15,6 @@ class RoomSlideBar extends StatefulWidget {
 }
 
 class _RoomSlideBarState extends State<RoomSlideBar> {
-  final CollectionReference chatroomCollection =
-      FirebaseFirestore.instance.collection('classmenuitem');
   late String menuItemId;
   late String userId;
   String userRole = '';
@@ -26,6 +25,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
   void initState() {
     super.initState();
     _initialize();
+    // Uncomment the following line to run the migration
+    // _migrateAudioRooms();
   }
 
   Future<void> _initialize() async {
@@ -58,17 +59,17 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
         userRole = data?['role'] ?? '';
       }
 
-      // ดึงข้อมูล chatroom และ audioroom
+      // ดึงข้อมูล chatroom และ groupaudioroom
       QuerySnapshot chatroomSnapshot = await FirebaseFirestore.instance
           .collection('classmenuitem')
           .doc(menuItemId)
           .collection('chatroom')
           .get();
 
-      QuerySnapshot audioroomSnapshot = await FirebaseFirestore.instance
+      QuerySnapshot groupaudioroomSnapshot = await FirebaseFirestore.instance
           .collection('classmenuitem')
           .doc(menuItemId)
-          .collection('audioroom')
+          .collection('groupaudioroom')
           .get();
 
       if (mounted) {
@@ -80,7 +81,7 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                   })
               .toList();
 
-          audioRooms = audioroomSnapshot.docs
+          audioRooms = groupaudioroomSnapshot.docs
               .map((doc) => doc['name'] as String)
               .toList();
         });
@@ -133,7 +134,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     );
                   },
                 ),
-
                 ListTile(
                   leading: Icon(Icons.settings,
                       color: Colors.grey), // ไอคอน Settings
@@ -162,24 +162,24 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                       ),
                       ...chatRooms
                           .map((room) => ListTile(
-                                title: Text(room['name']), // ชื่อของห้องแชท
-                                trailing: Icon(Icons.chat),
+                                title: Text(room['name']),
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => GroupChatPage(
-                                        documentId: room[
-                                            'id'], // ใช้ documentId ที่ถูกส่ง
+                                        documentId: room['id'],
                                       ),
                                     ),
                                   );
                                 },
+                                trailing: Icon(Icons.chat),
                               ))
                           .toList(),
                     ],
                   ),
                 ),
+
                 // แสดงผลรายการห้อง Audio Rooms
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0),
@@ -194,10 +194,19 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                       ...audioRooms
                           .map((roomName) => ListTile(
                                 title: Text(roomName),
-                                trailing: Icon(Icons.volume_up),
                                 onTap: () {
-                                  // Handle audio room tap
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VoiceChannelPage(
+                                        channelName:
+                                            roomName, // ส่งชื่อห้องที่เลือก
+                                        token: null, // หรือส่ง token หากมี
+                                      ),
+                                    ),
+                                  );
                                 },
+                                trailing: Icon(Icons.volume_up),
                               ))
                           .toList(),
                     ],
@@ -264,7 +273,9 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
             TextButton(
               child: Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               },
             ),
             TextButton(
@@ -279,39 +290,101 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                 }
 
                 try {
-                  final roomCollection = FirebaseFirestore.instance
-                      .collection('classmenuitem')
-                      .doc(menuItemId)
-                      .collection(roomType);
+                  final roomCollection = roomType == 'chatroom'
+                      ? FirebaseFirestore.instance
+                          .collection('classmenuitem')
+                          .doc(menuItemId)
+                          .collection('chatroom')
+                      : FirebaseFirestore.instance
+                          .collection('classmenuitem')
+                          .doc(menuItemId)
+                          .collection('groupaudioroom');
 
-                  await roomCollection.add({
+                  DocumentReference newRoomRef = await roomCollection.add({
                     'name': roomName,
                     'createdAt': Timestamp.now(),
                     'userId': userId,
                   });
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            '${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'} created successfully')),
-                  );
+                  if (roomType == 'audioroom') {
+                    await FirebaseFirestore.instance
+                        .collection('theaudioroom')
+                        .doc(newRoomRef.id) // ใช้ id ของเอกสารที่สร้าง
+                        .set({
+                      'name': roomName,
+                      'userId': userId,
+                      'menuItemId': menuItemId,
+                      'createdAt': Timestamp.now(),
+                    });
+
+                    // สร้างห้องเสียงใน Agora
+                    await _createAgoraChannel(
+                        newRoomRef.id); // ส่ง id ของเอกสารที่สร้าง
+                  }
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              '${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'} created successfully')),
+                    );
+                  }
 
                   // Refresh the list of rooms after creating a new one
                   await _initialize();
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Failed to create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}: $e')),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Failed to create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}: $e')),
+                    );
+                  }
                 }
 
-                Navigator.of(context).pop();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               },
             ),
           ],
         );
       },
     );
+  }
+
+  Future<void> _createAgoraChannel(String documentId) async {
+    // สร้างห้องเสียงใน Agora โดยใช้ documentId
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VoiceChannelPage(
+          channelName: documentId, // ส่ง id ของเอกสารที่สร้าง
+          token: null, // หรือส่ง token หากมี
+        ),
+      ),
+    );
+  }
+
+  Future<void> _migrateAudioRooms() async {
+    final QuerySnapshot oldAudioRoomsSnapshot = await FirebaseFirestore.instance
+        .collection('classmenuitem')
+        .doc(menuItemId)
+        .collection('audioroom')
+        .get();
+
+    final CollectionReference newAudioRoomsCollection = FirebaseFirestore
+        .instance
+        .collection('classmenuitem')
+        .doc(menuItemId)
+        .collection('groupaudioroom');
+
+    final WriteBatch batch = FirebaseFirestore.instance.batch();
+    for (var doc in oldAudioRoomsSnapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      await newAudioRoomsCollection.add(data);
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 }
