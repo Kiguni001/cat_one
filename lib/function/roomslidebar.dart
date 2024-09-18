@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sumhua_project/function/groupchat.dart';
 import 'package:sumhua_project/function/user_list_screen.dart';
 import 'package:sumhua_project/function/voice_channel.dart';
+import 'package:sumhua_project/function/settings_page.dart';
 
 class RoomSlideBar extends StatefulWidget {
   final String menuItemName;
@@ -139,9 +140,16 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                       color: Colors.grey), // ไอคอน Settings
                   title: Text('Settings'),
                   onTap: () {
-                    // Action เมื่อกด Settings
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SettingsPage(), // เรียกหน้า Settings
+                      ),
+                    );
                   },
                 ),
+
                 ListTile(
                   title: Text('Add Room'),
                   trailing: Icon(Icons.add),

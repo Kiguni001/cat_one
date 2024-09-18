@@ -66,7 +66,7 @@ class _SlideMenuState extends State<SlideMenu> {
                 child: Padding(
                   padding: EdgeInsets.only(top: 0.0),
                   child: Text(
-                    'Menu',
+                    'Class Menu',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 19,

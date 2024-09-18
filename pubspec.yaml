@@ -73,6 +73,8 @@ flutter:
     - assets/SumhuaPro.png
     - assets/Designer.jpeg
     - assets/MenuPage.jpeg
+    - assets/Roomchat.jpeg
+    - assets/RoomOne.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

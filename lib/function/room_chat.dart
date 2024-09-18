@@ -22,8 +22,41 @@ class RoomChat extends StatelessWidget {
         ),
       ),
       drawer: RoomSlideBar(menuItemName: menuItemName), // ส่งค่า menuItemName ไปที่ RoomSlideBar
-      body: Center(
-        child: Text(menuItemName), // แสดงชื่อเมนูที่รับมา
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/RoomOne.jpeg'), // กำหนดรูปภาพพื้นหลัง
+            fit: BoxFit.cover, // ปรับให้รูปภาพครอบคลุมพื้นที่ทั้งหมด
+          ),
+        ),
+        child: Stack(
+          children: [
+            // ใช้ Positioned เพื่อขยับข้อความขึ้นไปข้างบน
+            Positioned(
+              top: 150, // ปรับตำแหน่งความสูงที่นี่
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  menuItemName,
+                  style: TextStyle(
+                    color: Colors.white, // กำหนดสีข้อความเป็นสีขาว
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    // เพิ่มเส้นขอบรอบตัวอักษร
+                    shadows: [
+                      Shadow(
+                        offset: Offset(1.5, 1.5),
+                        blurRadius: 2.0,
+                        color: Colors.black, // สีดำสำหรับเงา (เส้นขอบ)
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

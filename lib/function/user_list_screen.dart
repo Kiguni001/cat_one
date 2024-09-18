@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'friendchat.dart'; // Import the friendchat page
+import 'friendchat.dart';
 
 class UserListScreen extends StatelessWidget {
   final User currentUser = FirebaseAuth.instance.currentUser!;
@@ -10,97 +10,141 @@ class UserListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('รายชื่อผู้ใช้'),
+    return Theme(
+      data: ThemeData(
+        primaryColor: Colors.cyan,
+        appBarTheme: AppBarTheme(
+          color: Colors.cyan,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.cyan,
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.cyan,
+          ),
+        ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: usersCollection
-                  .doc(currentUser.uid)
-                  .collection('friends')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('รายชื่อผู้ใช้'),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: usersCollection
+                    .doc(currentUser.uid)
+                    .collection('friends')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
 
-                final friends = snapshot.data?.docs ?? [];
+                  final friends = snapshot.data?.docs ?? [];
 
-                if (friends.isEmpty) {
-                  return Center(child: Text('ไม่มีรายชื่อผู้ใช้'));
-                }
+                  if (friends.isEmpty) {
+                    return Center(child: Text('ไม่มีรายชื่อผู้ใช้'));
+                  }
 
-                return ListView.builder(
-                  itemCount: friends.length,
-                  itemBuilder: (context, index) {
-                    final friend =
-                        friends[index].data() as Map<String, dynamic>;
-                    final friendUID = friend['uid'];
+                  return ListView.builder(
+                    itemCount: friends.length,
+                    itemBuilder: (context, index) {
+                      final friend =
+                          friends[index].data() as Map<String, dynamic>;
+                      final friendUID = friend['uid'];
 
-                    // Fetch the username from the users collection
-                    return FutureBuilder<DocumentSnapshot>(
-                      future: usersCollection.doc(friendUID).get(),
-                      builder: (context, userSnapshot) {
-                        if (userSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return ListTile(
-                            title: Text('Loading...'),
-                          );
-                        }
-                        if (userSnapshot.hasError) {
-                          return ListTile(
-                            title: Text('Error: ${userSnapshot.error}'),
-                          );
-                        }
-
-                        final userData = userSnapshot.data?.data()
-                                as Map<String, dynamic>? ??
-                            {};
-                        final username = userData.containsKey('username')
-                            ? userData['username']
-                            : 'Unknown User';
-
-                        return ListTile(
-                          title: Text(username),
-                          onTap: () {
-                            // Navigate to friendchat page when a friend is tapped
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FriendChatPage(
-                                  friendName: friend['name'] ??
-                                      'No Name', // Use null-aware operator
-                                  friendUID: friendUID,
-                                ),
-                              ),
+                      return FutureBuilder<DocumentSnapshot>(
+                        future: usersCollection.doc(friendUID).get(),
+                        builder: (context, userSnapshot) {
+                          if (userSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return ListTile(
+                              title: Text('Loading...'),
                             );
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                          }
+                          if (userSnapshot.hasError) {
+                            return ListTile(
+                              title: Text('Error: ${userSnapshot.error}'),
+                            );
+                          }
+
+                          final userData = userSnapshot.data?.data()
+                                  as Map<String, dynamic>? ??
+                              {};
+                          final username = userData.containsKey('username')
+                              ? userData['username']
+                              : 'Unknown User';
+                          final profilePicUrl = userData
+                                  .containsKey('profilePic')
+                              ? userData['profilePic']
+                              : 'https://example.com/default-profile-pic.png'; // Replace with default URL
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(userData[
+                                      'profileImageUrl'] ??
+                                  'https://example.com/default-profile-pic.png'), // URL รูปโปรไฟล์หรือรูป default
+                            ),
+                            title: Text(username),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteFriend(context, friendUID);
+                              },
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FriendChatPage(
+                                    friendName: friend['name'] ?? 'No Name',
+                                    friendUID: friendUID,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.person_add),
-              label: Text('Add Friend'),
-              onPressed: () {
-                _showAddFriendDialog(context);
-              },
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.person_add),
+                label: Text('Add Friend'),
+                onPressed: () {
+                  _showAddFriendDialog(context);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  void _deleteFriend(BuildContext context, String friendUID) async {
+    // Delete the friend from the user's friend list
+    await usersCollection
+        .doc(currentUser.uid)
+        .collection('friends')
+        .doc(friendUID)
+        .delete();
+
+    // Optionally, show a confirmation message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('ลบเพื่อนเรียบร้อยแล้ว')),
     );
   }
 
@@ -127,7 +171,6 @@ class UserListScreen extends StatelessWidget {
               onPressed: () async {
                 final friendUsername = _textFieldController.text;
 
-                // Search for the user in Firebase by username
                 QuerySnapshot userSnapshot = await usersCollection
                     .where('username', isEqualTo: friendUsername)
                     .get();
@@ -136,7 +179,6 @@ class UserListScreen extends StatelessWidget {
                   final friendDoc = userSnapshot.docs.first;
                   final friendUID = friendDoc.id;
 
-                  // Check if the user is already a friend
                   DocumentSnapshot friendSnapshot = await usersCollection
                       .doc(currentUser.uid)
                       .collection('friends')
@@ -144,18 +186,15 @@ class UserListScreen extends StatelessWidget {
                       .get();
 
                   if (friendSnapshot.exists) {
-                    // Show a message when the user is already a friend
-                    Navigator.of(context).pop(); // Close the dialog first
+                    Navigator.of(context).pop();
                     _showAlreadyFriendDialog(context);
                   } else {
-                    // Add the friend to the current user's friends list
                     await usersCollection
                         .doc(currentUser.uid)
                         .collection('friends')
                         .doc(friendUID)
                         .set({'name': friendDoc['username'], 'uid': friendUID});
 
-                    // Add the current user to the friend's friends list (two-way relationship)
                     await usersCollection
                         .doc(friendUID)
                         .collection('friends')
@@ -168,8 +207,7 @@ class UserListScreen extends StatelessWidget {
                     Navigator.of(context).pop();
                   }
                 } else {
-                  // Show a message when the user is not found
-                  Navigator.of(context).pop(); // Close the dialog first
+                  Navigator.of(context).pop();
                   _showErrorDialog(context);
                 }
               },

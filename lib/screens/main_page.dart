@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../slide_menu.dart'; // Update the path as needed
 import '../profile_setting.dart'; // นำเข้าไฟล์ profile_setting.dart
+import '../function/user_list_screen.dart'; // นำเข้า user_list_screen.dart ที่เก็บไว้ใน lib/function
 
 class MainPage extends StatefulWidget {
   @override
@@ -75,7 +76,12 @@ class _MainPageState extends State<MainPage> {
                 width: 200, // ขนาดความกว้างของปุ่ม
                 child: ElevatedButton(
                   onPressed: () {
-                    // Add action for "Friend Chat" button
+                    // นำทางไปยังหน้า user_list_screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => UserListScreen()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(
