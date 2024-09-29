@@ -12,18 +12,18 @@ class UserListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData(
-        primaryColor: Colors.cyan,
+        primaryColor: Colors.grey,
         appBarTheme: AppBarTheme(
-          color: Colors.cyan,
+          color: Colors.grey,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.cyan,
+            backgroundColor: Colors.grey,
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            backgroundColor: Colors.cyan,
+            backgroundColor: Colors.grey,
           ),
         ),
       ),
@@ -121,8 +121,12 @@ class UserListScreen extends StatelessWidget {
             Padding(
               padding: EdgeInsets.all(8.0),
               child: ElevatedButton.icon(
-                icon: Icon(Icons.person_add),
-                label: Text('Add Friend'),
+                icon: Icon(Icons.person_add,
+                    color: Colors.white), // สีไอคอนเป็นสีเทา
+                label: Text(
+                  'เพิ่มเพื่อน',
+                  style: TextStyle(color: Colors.white), // สีข้อความเป็นสีเทา
+                ),
                 onPressed: () {
                   _showAddFriendDialog(context);
                 },
@@ -143,9 +147,11 @@ class UserListScreen extends StatelessWidget {
         .delete();
 
     // Optionally, show a confirmation message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('ลบเพื่อนเรียบร้อยแล้ว')),
-    );
+    if (context.mounted) {  // เช็คว่า Widget ยังอยู่ใน Widget Tree
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ลบเพื่อนเรียบร้อยแล้ว')),
+      );
+    }
   }
 
   void _showAddFriendDialog(BuildContext context) {
@@ -154,20 +160,20 @@ class UserListScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add Friend'),
+          title: Text('เพิ่มเพื่อน'),
           content: TextField(
             controller: _textFieldController,
-            decoration: InputDecoration(hintText: "Enter friend's username"),
+            decoration: InputDecoration(hintText: "ใส่ 'ชื่อผู้ใช้' ของเพื่อน"),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('ยกเลิก'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Add'),
+              child: Text('เพิ่มเพื่อน'),
               onPressed: () async {
                 final friendUsername = _textFieldController.text;
 
@@ -204,6 +210,12 @@ class UserListScreen extends StatelessWidget {
                       'uid': currentUser.uid
                     });
 
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('เพิ่มเพื่อนเรียบร้อยแล้ว')),
+                      );
+                    }
+                    
                     Navigator.of(context).pop();
                   }
                 } else {
@@ -230,6 +242,12 @@ class UserListScreen extends StatelessWidget {
               child: Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
+                // แสดง SnackBar ที่นี่ได้ถ้าต้องการ
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('โปรดตรวจสอบชื่อผู้ใช้')),
+                  );
+                }
               },
             ),
           ],

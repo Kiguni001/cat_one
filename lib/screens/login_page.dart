@@ -54,11 +54,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 48, 47, 50),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
         title: Text(
-          'Login SumHua Account',
+          'ลงชื่อเข้าใช้ สุมหัว',
           style: TextStyle(
             color: Colors.white, // สีของข้อความ "Login"
             fontSize: 20, // ขนาดตัวอักษร (ปรับได้ตามต้องการ)
@@ -75,9 +75,9 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(height: 40),
             _buildLogo(),
             SizedBox(height: 40),
-            _buildTextField(_emailController, 'Email', Icons.email, false),
+            _buildTextField(_emailController, 'ใส่อีเมล', Icons.email, false),
             SizedBox(height: 20),
-            _buildTextField(_passwordController, 'Password', Icons.lock, true),
+            _buildTextField(_passwordController, 'ใส่รหัสผ่าน', Icons.lock, true),
             SizedBox(height: 30),
             _buildLoginButton(),
             SizedBox(height: 20),
@@ -103,19 +103,19 @@ class _LoginPageState extends State<LoginPage> {
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      style: TextStyle(color: Colors.white),
+      style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 255, 255, 255)),
+        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 0, 0, 0)),
         labelText: label,
-        labelStyle: TextStyle(color: const Color.fromARGB(255, 255, 255, 255)),
+        labelStyle: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
         enabledBorder: OutlineInputBorder(
           borderSide:
-              BorderSide(color: const Color.fromARGB(255, 255, 255, 255)),
+              BorderSide(color: const Color.fromARGB(255, 0, 0, 0)),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(
-              color: const Color.fromARGB(255, 255, 255, 255), width: 2),
+              color: const Color.fromARGB(255, 0, 0, 0), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
@@ -134,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       onPressed: _login,
       child: Text(
-        'Login',
+        'ลงชื่อเข้าใช้',
         style: TextStyle(
           fontSize: 18,
           color: Colors.white, // สีของข้อความ
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Don\'t have an account?'),
+        Text('ฉันยังไม่มีบัญชีผู้ใช้:'),
         TextButton(
           onPressed: () {
             Navigator.push(
@@ -156,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
             );
           },
           child: Text(
-            'Sign up',
+            'สร้างบัญชี',
             style: TextStyle(
               color: Colors.yellow[800],
               fontWeight: FontWeight.bold,

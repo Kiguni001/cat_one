@@ -61,7 +61,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text('การตั้งค่า'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -69,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             SwitchListTile(
-              title: Text('Dark Mode'),
+              title: Text('โหมดมืด'),
               value: isDarkMode,
               onChanged: (bool value) {
                 setState(() {
@@ -78,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
             SwitchListTile(
-              title: Text('Notification'),
+              title: Text('การแจ้งเตือน'),
               value: isNotificationEnabled,
               onChanged: (bool value) {
                 setState(() {
@@ -88,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             ElevatedButton(
               onPressed: _showLeaveClassDialog,
-              child: Text('Leave Class'),
+              child: Text('ออกจากห้องเรียนนี้'),
             ),
           ],
         ),

@@ -66,7 +66,7 @@ class _SlideMenuState extends State<SlideMenu> {
                 child: Padding(
                   padding: EdgeInsets.only(top: 0.0),
                   child: Text(
-                    'Class Menu',
+                    'ห้องเรียน',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 19,
@@ -100,7 +100,7 @@ class _SlideMenuState extends State<SlideMenu> {
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return ListTile(
-                          title: Text('Add Menu Item'),
+                          title: Text('สร้าง/เข้าร่วม ห้องเรียน'),
                           trailing: Icon(Icons.add),
                           onTap: () {
                             _showAddMenuOptionDialog();
@@ -132,7 +132,7 @@ class _SlideMenuState extends State<SlideMenu> {
                             return [
                               PopupMenuItem(
                                 value: 'Mute',
-                                child: Text(isMuted ? 'Unmute' : 'Mute'),
+                                child: Text(isMuted ? 'เปิดแจ้งเตือน' : 'ปิดแจ้งเตือน'),
                               ),
                               PopupMenuItem(
                                 value: 'Delete',
@@ -168,8 +168,8 @@ class _SlideMenuState extends State<SlideMenu> {
                 IconButton(
                   icon: Column(
                     children: [
-                      Icon(Icons.message, color: Colors.blue),
-                      Text('ข้อความ', style: TextStyle(fontSize: 12)),
+                      Icon(Icons.message, color: Colors.grey),
+                      Text('คุยส่วนตัว', style: TextStyle(fontSize: 12)),
                     ],
                   ),
                   onPressed: () {
@@ -183,8 +183,8 @@ class _SlideMenuState extends State<SlideMenu> {
                 IconButton(
                   icon: Column(
                     children: [
-                      Icon(Icons.person, color: Colors.blue), // ไอคอน Profile
-                      Text('Profile', style: TextStyle(fontSize: 12))
+                      Icon(Icons.person, color: Colors.grey), // ไอคอน Profile
+                      Text('โปรไฟล์', style: TextStyle(fontSize: 12))
                     ],
                   ),
                   onPressed: () {
@@ -210,19 +210,19 @@ class _SlideMenuState extends State<SlideMenu> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Select an Option'),
+          title: Text('เลือกการ สร้าง/เข้าร่วม'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text('Create Menu Item'),
+                title: Text('สร้างห้องเรียน'),
                 onTap: () {
                   Navigator.of(context).pop();
                   _showCreateMenuItemDialog();
                 },
               ),
               ListTile(
-                title: Text('Join Menu Item'),
+                title: Text('เข้าร่วมห้องเรียน'),
                 onTap: () {
                   Navigator.of(context).pop();
                   _showJoinMenuItemDialog();
@@ -241,25 +241,25 @@ class _SlideMenuState extends State<SlideMenu> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Create Menu Item'),
+          title: Text('สร้างห้องเรียน'),
           content: TextField(
             controller: _textFieldController,
-            decoration: InputDecoration(hintText: "Enter menu item name"),
+            decoration: InputDecoration(hintText: "ใส่ชื่อห้องเรียนของคุณ"),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('ยกเลิก'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Add'),
+              child: Text('สร้าง'),
               onPressed: () async {
                 final String menuItemName = _textFieldController.text.trim();
                 if (menuItemName.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please enter a menu item name')),
+                    SnackBar(content: Text('โปรดใส่ชื่อห้องเรียนของคุณ')),
                   );
                   return;
                 }
@@ -328,13 +328,13 @@ class _SlideMenuState extends State<SlideMenu> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Join Menu Item'),
+          title: Text('เข้าร่วมห้องเรียน'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _idController,
-                decoration: InputDecoration(hintText: "Enter menu item ID"),
+                decoration: InputDecoration(hintText: "ใส่ ID ของห้องเรียน"),
               ),
               SizedBox(height: 10),
               ElevatedButton(
@@ -343,24 +343,24 @@ class _SlideMenuState extends State<SlideMenu> {
                     _idController.text = value?.text ?? '';
                   });
                 },
-                child: Text('Paste ID from Clipboard'),
+                child: Text('วาง ID ที่คัดลอก'),
               ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('ยกเลิก'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Join'),
+              child: Text('เข้าร่วม'),
               onPressed: () async {
                 final String menuItemId = _idController.text.trim();
                 if (menuItemId.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please enter a menu item ID')),
+                    SnackBar(content: Text('โปรดใส่ ID ของห้องเรียน')),
                   );
                   return;
                 }
@@ -409,20 +409,20 @@ class _SlideMenuState extends State<SlideMenu> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Menu Item ID'),
+          title: Text('รหัส ID ของห้องเรียน'),
           content: Text(menuItemId),
           actions: <Widget>[
             TextButton(
-              child: Text('Copy ID'),
+              child: Text('คัดลอก ID'),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: menuItemId));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Menu Item ID copied to clipboard')),
+                  SnackBar(content: Text('คัดลอก ID ของห้องเรียนแล้ว')),
                 );
               },
             ),
             TextButton(
-              child: Text('Close'),
+              child: Text('ปิด'),
               onPressed: () {
                 Navigator.of(context).pop();
               },

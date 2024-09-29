@@ -26,8 +26,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
   void initState() {
     super.initState();
     _initialize();
-    // Uncomment the following line to run the migration
-    // _migrateAudioRooms();
   }
 
   Future<void> _initialize() async {
@@ -99,14 +97,14 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
             height: 110.0,
             child: DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.orange, // สีส้ม
+                color: Colors.blueGrey[900], // สีส้ม
               ),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
                   padding: EdgeInsets.only(top: 0.0),
                   child: Text(
-                    'Room Management',
+                    'เมนูของห้องเรียน',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 19,
@@ -122,36 +120,32 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
               children: <Widget>[
                 // เพิ่มปุ่ม Chat Friend และ Setting ด้านบนปุ่ม Add Room
                 ListTile(
-                  leading:
-                      Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
-                  title: Text('Chat Friend'),
+                  leading: Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
+                  title: Text('แชทส่วนตัว'),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            UserListScreen(), // เปิดหน้า UserListScreen
+                        builder: (context) => UserListScreen(), // เปิดหน้า UserListScreen
                       ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.settings,
-                      color: Colors.grey), // ไอคอน Settings
-                  title: Text('Settings'),
+                  leading: Icon(Icons.settings, color: Colors.grey), // ไอคอน Settings
+                  title: Text('การตั้งค่า'),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            SettingsPage(), // เรียกหน้า Settings
+                        builder: (context) => SettingsPage(), // เรียกหน้า Settings
                       ),
                     );
                   },
                 ),
 
                 ListTile(
-                  title: Text('Add Room'),
+                  title: Text('สร้างห้องพูดคุย'),
                   trailing: Icon(Icons.add),
                   onTap: () {
                     _showAddRoomDialog();
@@ -164,9 +158,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Chat Rooms:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        'ห้องข้อความ รายการ:',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       ...chatRooms
                           .map((room) => ListTile(
@@ -195,9 +188,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Audio Rooms:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        'ห้องคุยเสียง รายการ:',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       ...audioRooms
                           .map((roomName) => ListTile(
@@ -207,9 +199,7 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => VoiceChannelPage(
-                                        channelName:
-                                            roomName, // ส่งชื่อห้องที่เลือก
-                                        token: null, // หรือส่ง token หากมี
+                                        channelId: roomName, // ส่งชื่อห้องที่เลือก
                                       ),
                                     ),
                                   );
@@ -233,19 +223,19 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Create Room'),
+          title: Text('สร้างห้องพูดคุย'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text('Create Chat Room'),
+                title: Text('สร้างห้องข้อความ'),
                 onTap: () {
                   Navigator.of(context).pop();
                   _createRoom('chatroom');
                 },
               ),
               ListTile(
-                title: Text('Create Audio Room'),
+                title: Text('สร้างห้องคุยเสียง'),
                 onTap: () {
                   Navigator.of(context).pop();
                   _createRoom('audioroom');
@@ -272,14 +262,14 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
       builder: (context) {
         return AlertDialog(
           title: Text(
-              'Create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}'),
+              'สร้าง ${roomType == 'chatroom' ? 'ห้องพูดคุย' : 'ห้องคุยเสียง'}'),
           content: TextField(
             controller: _nameController,
-            decoration: InputDecoration(hintText: "Enter room name"),
+            decoration: InputDecoration(hintText: "ใส่ชื่อห้อง"),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('ยกเลิก'),
               onPressed: () {
                 if (mounted) {
                   Navigator.of(context).pop();
@@ -287,7 +277,7 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
               },
             ),
             TextButton(
-              child: Text('Create'),
+              child: Text('สร้าง'),
               onPressed: () async {
                 final roomName = _nameController.text.trim();
                 if (roomName.isEmpty) {
@@ -325,33 +315,24 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                       'createdAt': Timestamp.now(),
                     });
 
-                    // สร้างห้องเสียงใน Agora
-                    await _createAgoraChannel(
-                        newRoomRef.id); // ส่ง id ของเอกสารที่สร้าง
-                  }
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              '${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'} created successfully')),
+                    // นำทางไปยัง VoiceChannelPage ที่มีชื่อห้องที่สร้าง
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => VoiceChannelPage(
+                          channelId: roomName, // ส่งชื่อห้องที่สร้าง
+                        ),
+                      ),
                     );
                   }
 
-                  // Refresh the list of rooms after creating a new one
-                  await _initialize();
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
                 } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'Failed to create ${roomType == 'chatroom' ? 'Chat Room' : 'Audio Room'}: $e')),
-                    );
-                  }
-                }
-
-                if (mounted) {
-                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error creating room: $e')),
+                  );
                 }
               },
             ),
@@ -359,40 +340,5 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
         );
       },
     );
-  }
-
-  Future<void> _createAgoraChannel(String documentId) async {
-    // สร้างห้องเสียงใน Agora โดยใช้ documentId
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VoiceChannelPage(
-          channelName: documentId, // ส่ง id ของเอกสารที่สร้าง
-          token: null, // หรือส่ง token หากมี
-        ),
-      ),
-    );
-  }
-
-  Future<void> _migrateAudioRooms() async {
-    final QuerySnapshot oldAudioRoomsSnapshot = await FirebaseFirestore.instance
-        .collection('classmenuitem')
-        .doc(menuItemId)
-        .collection('audioroom')
-        .get();
-
-    final CollectionReference newAudioRoomsCollection = FirebaseFirestore
-        .instance
-        .collection('classmenuitem')
-        .doc(menuItemId)
-        .collection('groupaudioroom');
-
-    final WriteBatch batch = FirebaseFirestore.instance.batch();
-    for (var doc in oldAudioRoomsSnapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      await newAudioRoomsCollection.add(data);
-      batch.delete(doc.reference);
-    }
-    await batch.commit();
   }
 }

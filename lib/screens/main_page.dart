@@ -13,7 +13,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sumhua Menu Page'),
+        title: Text('รายการเมนู'),
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
@@ -29,43 +29,40 @@ class _MainPageState extends State<MainPage> {
       ),
       drawer: SlideMenu(), // Ensure SlideMenu is imported correctly
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/MenuPage.jpeg'), // ใส่รูปพื้นหลังที่นี่
-            fit: BoxFit.cover,
-          ),
-        ),
+        color: Colors.white, // เปลี่ยนพื้นหลังเป็นสีขาว
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // ปุ่มห้องเรียนอยู่ด้านบนสุด
               SizedBox(
                 width: 200, // ขนาดความกว้างของปุ่ม
                 child: ElevatedButton(
                   onPressed: () {
-                    // นำทางไปยังหน้า ProfileSettingPage
+                    // นำทางไปยังหน้า SlideMenu
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => ProfileSettingPage()),
+                          builder: (context) => SlideMenu()), // เปลี่ยนไปที่ SlideMenu
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(
-                        120, 33, 149, 243), // Background color of the button
+                    backgroundColor: Colors.white, // สีพื้นหลังของปุ่มเป็นสีขาว
                     padding: EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    elevation: 10, // เพิ่มเงาให้กับปุ่ม
+                    shadowColor: Colors.black.withOpacity(0.5), // กำหนดสีเงา
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.person, color: Colors.white, size: 50),
+                      Icon(Icons.class_, color: Colors.grey, size: 50), // สีไอคอนเป็นสีเทา
                       SizedBox(height: 10),
                       Text(
-                        'Profile',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        'ห้องเรียน',
+                        style: TextStyle(color: Colors.grey, fontSize: 18), // สีข้อความเป็นสีเทา
                       ),
                     ],
                   ),
@@ -84,21 +81,56 @@ class _MainPageState extends State<MainPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(
-                        123, 76, 175, 79), // Background color of the button
+                    backgroundColor: Colors.white, // สีพื้นหลังของปุ่มเป็นสีขาว
                     padding: EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    elevation: 10, // เพิ่มเงาให้กับปุ่ม
+                    shadowColor: Colors.black.withOpacity(0.5), // กำหนดสีเงา
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.chat, color: Colors.white, size: 50),
+                      Icon(Icons.chat, color: Colors.grey, size: 50), // สีไอคอนเป็นสีเทา
                       SizedBox(height: 10),
                       Text(
-                        'Friend Chat',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        'คุยส่วนตัว',
+                        style: TextStyle(color: Colors.grey, fontSize: 18), // สีข้อความเป็นสีเทา
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 30), // Spacing between buttons
+              SizedBox(
+                width: 200, // ขนาดความกว้างของปุ่ม
+                child: ElevatedButton(
+                  onPressed: () {
+                    // นำทางไปยังหน้า ProfileSettingPage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ProfileSettingPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white, // สีพื้นหลังของปุ่มเป็นสีขาว
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 10, // เพิ่มเงาให้กับปุ่ม
+                    shadowColor: Colors.black.withOpacity(0.5), // กำหนดสีเงา
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.person, color: Colors.grey, size: 50), // สีไอคอนเป็นสีเทา
+                      SizedBox(height: 10),
+                      Text(
+                        'โปรไฟล์',
+                        style: TextStyle(color: Colors.grey, fontSize: 18), // สีข้อความเป็นสีเทา
                       ),
                     ],
                   ),

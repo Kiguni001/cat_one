@@ -130,6 +130,19 @@ class _GroupChatPageState extends State<GroupChatPage> {
     }
   }
 
+  Future<String> _getUserStatus(String uid) async {
+    try {
+      DocumentSnapshot userSnapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      Map<String, dynamic>? userData =
+          userSnapshot.data() as Map<String, dynamic>?;
+      return userData?['status'] ?? 'Unknown status';
+    } catch (e) {
+      print('Error fetching user status: $e');
+      return 'Unknown status';
+    }
+  }
+
   void _viewFile(String url, String type) {
     Navigator.push(
       context,
@@ -146,8 +159,11 @@ class _GroupChatPageState extends State<GroupChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Group Chat'),
-        backgroundColor: Colors.orange,
+        title: Text(
+          'ห้องข้อความกลุ่ม',
+          style: TextStyle(color: Colors.white), // ปรับข้อความให้เป็นสีขาว
+        ),
+        backgroundColor: Colors.brown[700],
       ),
       body: Column(
         children: [
@@ -166,11 +182,12 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   reverse: true,
                   children: messages.map((message) {
                     final messageData = message.data() as Map<String, dynamic>;
+                    final senderUID = messageData['senderUID'];
                     return ListTile(
                       leading: FutureBuilder<DocumentSnapshot>(
                         future: FirebaseFirestore.instance
                             .collection('users')
-                            .doc(messageData['senderUID']) // ใช้ senderUID แทน friendUID
+                            .doc(senderUID) // ใช้ senderUID แทน friendUID
                             .get(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
@@ -186,8 +203,8 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
                           final profileImageUrl =
                               userData?['profileImageUrl'] ?? '';
-                          final userName =
-                              userData?['name'] ?? 'Unknown'; // ใช้ชื่อที่ได้รับจาก Firebase
+                          final userName = userData?['name'] ??
+                              'Unknown'; // ใช้ชื่อที่ได้รับจาก Firebase
 
                           return CircleAvatar(
                             backgroundImage: profileImageUrl.isNotEmpty
@@ -199,43 +216,56 @@ class _GroupChatPageState extends State<GroupChatPage> {
                           );
                         },
                       ),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sent by: ${messageData['senderName']}', // แสดงชื่อของผู้ส่งถัดจาก Sent by:
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          if (messageData['type'] == 'message')
-                            Text(messageData['content'])
-                          else if (messageData['type'] == 'image')
-                            GestureDetector(
-                              onTap: () {
-                                _viewFile(messageData['content'], 'image');
-                              },
-                              child: Image.network(
-                                messageData['content'],
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+                      title: FutureBuilder<String>(
+                        future: _getUserStatus(senderUID),
+                        builder: (context, statusSnapshot) {
+                          if (statusSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text('Loading status...');
+                          }
+                          if (statusSnapshot.hasError) {
+                            return Text('Error loading status');
+                          }
+                          final userStatus = statusSnapshot.data ?? 'Unknown';
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$userStatus: ${messageData['senderName']}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            )
-                          else if (messageData['type'] == 'file')
-                            GestureDetector(
-                              onTap: () {
-                                _viewFile(messageData['content'], 'file');
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(Icons.attach_file),
-                                  Text('File attached'),
-                                ],
-                              ),
-                            ),
-                        ],
+                              if (messageData['type'] == 'message')
+                                Text(messageData['content'])
+                              else if (messageData['type'] == 'image')
+                                GestureDetector(
+                                  onTap: () {
+                                    _viewFile(messageData['content'], 'image');
+                                  },
+                                  child: Image.network(
+                                    messageData['content'],
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else if (messageData['type'] == 'file')
+                                GestureDetector(
+                                  onTap: () {
+                                    _viewFile(messageData['content'], 'file');
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.attach_file),
+                                      Text('File attached'),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     );
                   }).toList(),
@@ -264,7 +294,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Type your message here...',
+                      hintText: 'พิมพ์ข้อความ...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

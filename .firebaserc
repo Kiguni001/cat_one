@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "newsumhua"
-  }
+  },
+  "targets": {},
+  "etags": {
+    "newsumhua": {
+      "extensionInstances": {}
+    }
+  },
+  "dataconnectEmulatorConfig": {}
 }

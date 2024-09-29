@@ -1,87 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:stream_chat_flutter/stream_chat_flutter.dart' as stream;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart'; // เพิ่มการนำเข้าที่นี่
 
 class VoiceChannelPage extends StatefulWidget {
-  final String channelName;
-  final String? token;
+  final String channelId; // รับ channelId ที่ส่งมาจาก roomslidebar.dart
 
-  VoiceChannelPage({required this.channelName, this.token});
+  VoiceChannelPage({required this.channelId});
 
   @override
   _VoiceChannelPageState createState() => _VoiceChannelPageState();
 }
 
 class _VoiceChannelPageState extends State<VoiceChannelPage> {
-  late RtcEngine _engine;
-  bool _joined = false;
-  int? _remoteUid;
+  late stream.StreamChatClient client;
+  late String userId;
+  late String userToken;
 
   @override
   void initState() {
     super.initState();
-    _initAgora();
+    initialize();
   }
 
-  Future<void> _initAgora() async {
-    // ขอสิทธิ์การเข้าถึงไมโครโฟน
-    final microphoneStatus = await Permission.microphone.request();
-    if (!microphoneStatus.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Microphone permission is required to join the channel.')),
+  Future<void> initialize() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      userId = user.uid;
+      userToken = await getToken(userId); // สร้าง Token สำหรับผู้ใช้
+
+      client = stream.StreamChatClient(
+        'q32a5zv4uj3q', // ใส่ API Key ของคุณ
+        logLevel: stream.Level.INFO,
       );
-      return;
+
+      try {
+        await client.connectUser(
+          stream.User(id: userId),
+          userToken,
+        );
+
+        // เข้าร่วม channel
+        await client.channel('voice', id: widget.channelId).watch();
+      } catch (e) {
+        // จัดการข้อผิดพลาดในการเชื่อมต่อ
+        print('Error connecting user: $e');
+      }
+    } else {
+      // จัดการกรณีที่ผู้ใช้ไม่ได้เข้าสู่ระบบ
+      // อาจจะแสดงหน้าจอเข้าสู่ระบบหรือแจ้งเตือน
+      print('User is not logged in.');
     }
+  }
 
-    // สร้าง Agora Engine
-    _engine = createAgoraRtcEngine();
+  Future<String> getToken(String userId) async {
     try {
-      await _engine.initialize(RtcEngineContext(appId: 'c5a1364a4bc440749bcce91aafd27a35'));
-
-      _engine.registerEventHandler(
-        RtcEngineEventHandler(
-          onJoinChannelSuccess: (RtcConnection connection, int uid) {
-            setState(() {
-              _joined = true;
-            });
-          },
-          onUserJoined: (RtcConnection connection, int uid, int elapsed) {
-            setState(() {
-              _remoteUid = uid;
-            });
-          },
-          onUserOffline: (RtcConnection connection, int uid, UserOfflineReasonType reason) {
-            setState(() {
-              _remoteUid = null;
-            });
-          },
-        ),
-      );
-
-      // ตรวจสอบชื่อช่อง (channelName) และ token ก่อนเข้าร่วม
-      print('Joining channel with name: ${widget.channelName}');
-      print('Using token: ${widget.token ?? 'No Token'}');
-
-      // เข้าร่วมช่องด้วย Token และ channelName
-      await _engine.joinChannel(
-        token: widget.token ?? 'b09e0ddb8c794a67b14f0aa451d9a91f',
-        channelId: widget.channelName,
-        uid: 0,
-        options: const ChannelMediaOptions(),
-      );
+      // เรียกใช้ Cloud Function
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('createStreamToken');
+      final response = await callable.call();
+      
+      // รับ Token จากการตอบกลับ
+      return response.data['token'];
     } catch (e) {
-      print('Error initializing Agora engine or joining channel: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to join the channel. Please try again later.')),
-      );
+      // จัดการข้อผิดพลาด
+      print('Error getting token: $e');
+      return '';
     }
   }
 
   @override
   void dispose() {
-    // ปิดการเชื่อมต่อ Agora เมื่อออกจากหน้า
-    _engine.leaveChannel();
-    _engine.release();
+    client.disconnectUser();
     super.dispose();
   }
 
@@ -89,21 +79,10 @@ class _VoiceChannelPageState extends State<VoiceChannelPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Voice Channel'),
+        title: Text(widget.channelId),
       ),
       body: Center(
-        child: _joined
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Joined the channel'),
-                  if (_remoteUid != null)
-                    Text('Remote user: $_remoteUid')
-                  else
-                    Text('Waiting for remote user...'),
-                ],
-              )
-            : CircularProgressIndicator(),
+        child: Text('Voice Channel: ${widget.channelId}'),
       ),
     );
   }

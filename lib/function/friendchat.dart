@@ -185,7 +185,7 @@ class _FriendChatPageState extends State<FriendChatPage> {
                   child: TextField(
                     controller: _messageController,
                     decoration: InputDecoration(
-                      hintText: 'Type your message...',
+                      hintText: 'พิมพ์ข้อความ...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),

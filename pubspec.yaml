@@ -40,7 +40,16 @@ dependencies:
   url_launcher: ^6.0.20
   share_plus: ^10.0.0
   agora_rtc_engine: ^6.3.2
-  permission_handler: ^11.3.1
+  permission_handler: ^11.3.1   # สำหรับการขอสิทธิ์เข้าถึงไมโครโฟน, กล้อง ฯลฯ
+  shared_preferences: ^2.3.2
+  stream_chat_flutter: ^8.1.0   # SDK สำหรับการแชท
+  stream_video_flutter: ^0.5.4  # SDK สำหรับวิดีโอคอลและแชร์หน้าจอ
+  stream_video: ^0.5.4
+  stream_video_push_notification: ^0.5.4
+  cloud_functions: ^5.1.2
+  internet_connection_checker: ^2.0.0
+  http: ^1.2.2
+  
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

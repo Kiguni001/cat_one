@@ -10,18 +10,25 @@ class RoomChat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Room Chat'),
-        backgroundColor: Colors.orange,
+        title: Text(
+          'ห้องเรียน',
+          style: TextStyle(color: Colors.white), // เปลี่ยนสีข้อความเป็นสีขาว
+        ),
+        backgroundColor: Colors.blueGrey[700],
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu),
+            icon: Icon(
+              Icons.menu,
+              color: Colors.white, // เปลี่ยนสีของไอคอนเป็นสีขาว
+            ),
             onPressed: () {
               Scaffold.of(context).openDrawer(); // เปิด SlideBar
             },
           ),
         ),
       ),
-      drawer: RoomSlideBar(menuItemName: menuItemName), // ส่งค่า menuItemName ไปที่ RoomSlideBar
+      drawer: RoomSlideBar(
+          menuItemName: menuItemName), // ส่งค่า menuItemName ไปที่ RoomSlideBar
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
