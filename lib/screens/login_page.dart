@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart';
+import 'new_password.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -60,9 +61,9 @@ class _LoginPageState extends State<LoginPage> {
         title: Text(
           'ลงชื่อเข้าใช้ สุมหัว',
           style: TextStyle(
-            color: Colors.white, // สีของข้อความ "Login"
-            fontSize: 20, // ขนาดตัวอักษร (ปรับได้ตามต้องการ)
-            fontWeight: FontWeight.bold, // ทำตัวอักษรหนา (ถ้าต้องการ)
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
@@ -77,12 +78,34 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(height: 40),
             _buildTextField(_emailController, 'ใส่อีเมล', Icons.email, false),
             SizedBox(height: 20),
-            _buildTextField(_passwordController, 'ใส่รหัสผ่าน', Icons.lock, true),
-            SizedBox(height: 30),
+            _buildTextField(
+                _passwordController, 'ใส่รหัสผ่าน', Icons.lock, true),
+            SizedBox(height: 0),
+            _buildForgotPasswordButton(), // เพิ่มส่วนนี้
+            SizedBox(height: 20),
             _buildLoginButton(),
             SizedBox(height: 20),
             _buildSignupOption(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForgotPasswordButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => NewPasswordPage()), // หน้า new_password
+          );
+        },
+        child: Text(
+          'ลืมรหัสผ่าน?',
+          style: TextStyle(color: Colors.blue[700]),
         ),
       ),
     );
@@ -109,13 +132,12 @@ class _LoginPageState extends State<LoginPage> {
         labelText: label,
         labelStyle: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
         enabledBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: const Color.fromARGB(255, 0, 0, 0)),
+          borderSide: BorderSide(color: const Color.fromARGB(255, 0, 0, 0)),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-              color: const Color.fromARGB(255, 0, 0, 0), width: 2),
+          borderSide:
+              BorderSide(color: const Color.fromARGB(255, 0, 0, 0), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
