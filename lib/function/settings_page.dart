@@ -9,8 +9,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool isDarkMode = false;
-  bool isNotificationEnabled = true;
   late String userId;
   late String menuItemId = ''; // กำหนดค่าเริ่มต้นให้เป็นค่าว่าง
 
@@ -68,32 +66,103 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SwitchListTile(
-              title: Text('โหมดมืด'),
-              value: isDarkMode,
-              onChanged: (bool value) {
-                setState(() {
-                  isDarkMode = value;
-                });
-              },
-            ),
-            SwitchListTile(
-              title: Text('การแจ้งเตือน'),
-              value: isNotificationEnabled,
-              onChanged: (bool value) {
-                setState(() {
-                  isNotificationEnabled = value;
-                });
-              },
-            ),
             ElevatedButton(
               onPressed: _showLeaveClassDialog,
               child: Text('ออกจากห้องเรียนนี้'),
             ),
+            SizedBox(height: 20),
+            menuItemId.isNotEmpty
+                ? Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('classmenuitem')
+                          .doc(menuItemId)
+                          .collection('role')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return CircularProgressIndicator();
+                        }
+                        final users = snapshot.data!.docs;
+
+                        // ดึงข้อมูลของผู้ใช้จาก collection 'users'
+                        return FutureBuilder<List<Map<String, dynamic>>>(
+                          future: _getUserProfiles(users),
+                          builder: (context, userSnapshot) {
+                            if (!userSnapshot.hasData) {
+                              return CircularProgressIndicator();
+                            }
+
+                            final userProfiles = userSnapshot.data!;
+                            return Column(
+                              children: [
+                                Text(
+                                  'รายชื่อ User ในห้องเรียนนี้ :',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: userProfiles.length,
+                                    itemBuilder: (context, index) {
+                                      final userProfile = userProfiles[index];
+                                      final displayName =
+                                          userProfile['username'];
+                                      final profilePictureUrl =
+                                          userProfile['profileImageUrl'];
+
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundImage: profilePictureUrl
+                                                      is String &&
+                                                  profilePictureUrl.isNotEmpty
+                                              ? NetworkImage(profilePictureUrl)
+                                              : AssetImage(
+                                                      'assets/default_avatar.png')
+                                                  as ImageProvider<Object>,
+                                        ),
+                                        title: Text(displayName),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  )
+                : Text('ไม่มีผู้ใช้อยู่ในห้องเรียนนี้'),
           ],
         ),
       ),
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _getUserProfiles(
+      List<QueryDocumentSnapshot> users) async {
+    List<Map<String, dynamic>> userProfiles = [];
+
+    for (var userDoc in users) {
+      final userId = userDoc['userId'];
+
+      // ดึงข้อมูลผู้ใช้จาก collection 'users'
+      DocumentSnapshot userProfileDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (userProfileDoc.exists) {
+        userProfiles.add({
+          'username': userProfileDoc['username'],
+          'profileImageUrl': userProfileDoc['profileImageUrl'],
+        });
+      }
+    }
+
+    return userProfiles;
   }
 
   void _showLeaveClassDialog() {
