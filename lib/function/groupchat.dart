@@ -155,6 +155,16 @@ class _GroupChatPageState extends State<GroupChatPage> {
     );
   }
 
+  // เพิ่มฟังก์ชันสำหรับแสดงอัลบั้ม
+  void _viewAlbum() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AlbumPage(documentId: widget.documentId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,6 +174,13 @@ class _GroupChatPageState extends State<GroupChatPage> {
           style: TextStyle(color: Colors.white), // ปรับข้อความให้เป็นสีขาว
         ),
         backgroundColor: Colors.brown[700],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.photo_album),
+            color: Colors.white,  // กำหนดสีของไอคอนเป็นสีขาว
+            onPressed: _viewAlbum, // เมื่อกดจะเปิดหน้าอัลบั้ม
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -311,6 +328,148 @@ class _GroupChatPageState extends State<GroupChatPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// สร้างหน้า AlbumPage เพื่อแสดงภาพและไฟล์
+class AlbumPage extends StatefulWidget {
+  final String documentId;
+
+  AlbumPage({required this.documentId});
+
+  @override
+  _AlbumPageState createState() => _AlbumPageState();
+}
+
+class _AlbumPageState extends State<AlbumPage> {
+  // ตัวแปรสำหรับเลือกแสดงผล
+  bool isImageView = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final dataCollection = FirebaseFirestore.instance
+        .collection('groupchatroom')
+        .doc(widget.documentId)
+        .collection('data');
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('อัลบั้ม ภาพ/ไฟล์'),
+        actions: [
+          // ปุ่มสำหรับสลับการแสดงผล (ภาพ/ไฟล์)
+          ToggleButtons(
+            children: [Icon(Icons.image), Icon(Icons.attach_file)],
+            isSelected: [isImageView, !isImageView],
+            onPressed: (index) {
+              setState(() {
+                isImageView = index == 0;
+              });
+            },
+          ),
+        ],
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: dataCollection.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final data = snapshot.data!.docs;
+          final imagesAndFiles = data
+              .where((doc) =>
+                  (isImageView && doc['type'] == 'image') ||
+                  (!isImageView && doc['type'] == 'file'))
+              .toList();
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(10),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3, // จำนวนคอลัมน์ในกริด
+              crossAxisSpacing: 10, // ระยะห่างระหว่างคอลัมน์
+              mainAxisSpacing: 10, // ระยะห่างระหว่างแถว
+            ),
+            itemCount: imagesAndFiles.length,
+            itemBuilder: (context, index) {
+              final messageData = imagesAndFiles[index].data()
+                  as Map<String, dynamic>;
+              final senderName = messageData['senderName'] ?? 'Unknown';
+
+              if (messageData['type'] == 'image') {
+                // ถ้าเป็นรูปภาพให้แสดงในรูปแบบกริด
+                return GestureDetector(
+                  onTap: () {
+                    // เพิ่มฟังก์ชันการคลิกเพื่อดูภาพหรือไฟล์
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.network(messageData['content']),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('ส่งโดย: $senderName'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(messageData['content']),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                );
+              } else {
+                // ถ้าเป็นไฟล์ให้แสดงเป็นไอคอนพร้อมชื่อไฟล์
+                return GestureDetector(
+                  onTap: () {
+                    // เพิ่มฟังก์ชันการคลิกเพื่อดูไฟล์
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.attach_file, size: 50),
+                              SizedBox(height: 10),
+                              Text('ไฟล์แนบ'),
+                              SizedBox(height: 10),
+                              Text('ส่งโดย: $senderName'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.attach_file,
+                        size: 50,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+        },
       ),
     );
   }

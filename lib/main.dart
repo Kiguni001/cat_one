@@ -17,7 +17,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override 
   Widget build(BuildContext context) {
-    return MaterialApp(
+    var materialApp = MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: {
@@ -27,5 +27,6 @@ class MyApp extends StatelessWidget {
         '/user_stream': (context) => UserStreamPage(), // เพิ่ม Routing สำหรับหน้าสร้าง Stream user
       },
     );
+    return materialApp;
   }
 }
