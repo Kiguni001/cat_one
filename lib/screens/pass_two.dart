@@ -4,8 +4,9 @@ import 'pass_three.dart'; // นำเข้าไฟล์ pass_three.dart
 
 class PassTwoPage extends StatefulWidget {
   final String uid;
+  final String email; // เพิ่มตัวแปร email
 
-  PassTwoPage({required this.uid});
+  PassTwoPage({required this.uid, required this.email});
 
   @override
   _PassTwoPageState createState() => _PassTwoPageState();
@@ -61,7 +62,7 @@ class _PassTwoPageState extends State<PassTwoPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ForgotPasswordPage(uid: widget.uid),
+              builder: (context) => ForgotPasswordPage(uid: widget.uid, email: widget.email),
             ),
           );
         } else {

@@ -34,7 +34,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PassTwoPage(uid: uid),
+            builder: (context) => PassTwoPage(uid: uid, email: email),
           ),
         );
       } else {

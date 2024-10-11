@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
-  final String uid; // เพิ่มตัวแปร uid
+  final String uid; 
+  final String email; // เพิ่มตัวแปร email
 
-  // สร้าง constructor ที่รับ uid
-  ForgotPasswordPage({required this.uid});
+  // สร้าง constructor ที่รับ uid และ email
+  ForgotPasswordPage({required this.uid, required this.email}) {
+    _emailController.text = email; // ตั้งค่าให้กับช่องกรอก Gmail
+  }
 
   Future<void> _resetPassword(BuildContext context) async {
     final email = _emailController.text.trim();
@@ -44,7 +47,7 @@ class ForgotPasswordPage extends StatelessWidget {
             Text('กรุณากรอกอีเมลที่คุณใช้ลงทะเบียน:',
                 style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
-            _buildTextField(_emailController, 'อีเมล'),
+            _buildTextField(_emailController, 'อีเมล'), // ใช้ฟังก์ชันนี้เพื่อสร้างช่องกรอก Gmail
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _resetPassword(context),
@@ -60,7 +63,7 @@ class ForgotPasswordPage extends StatelessWidget {
   Widget _buildTextField(TextEditingController controller, String label) {
     return TextField(
       controller: controller,
-      keyboardType: TextInputType.emailAddress,
+      readOnly: true, // ทำให้ช่องกรอกเป็นแบบล็อค
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),
