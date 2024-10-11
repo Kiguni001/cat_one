@@ -61,7 +61,7 @@ class _PassTwoPageState extends State<PassTwoPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PassThreePage(uid: widget.uid),
+              builder: (context) => ForgotPasswordPage(uid: widget.uid),
             ),
           );
         } else {

@@ -1,32 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class PassThreePage extends StatelessWidget {
-  final String uid;
+class ForgotPasswordPage extends StatelessWidget {
+  final TextEditingController _emailController = TextEditingController();
+  final String uid; // เพิ่มตัวแปร uid
 
-  PassThreePage({required this.uid});
+  // สร้าง constructor ที่รับ uid
+  ForgotPasswordPage({required this.uid});
 
-  final TextEditingController _newPasswordController = TextEditingController();
+  Future<void> _resetPassword(BuildContext context) async {
+    final email = _emailController.text.trim();
 
-  Future<void> _changePassword(BuildContext context) async {
-    final newPassword = _newPasswordController.text.trim();
-
-    if (newPassword.isEmpty) {
-      _showMessage(context, 'กรุณากรอกรหัสผ่านใหม่');
+    if (email.isEmpty) {
+      _showMessage(context, 'กรุณากรอกอีเมล');
       return;
     }
 
     try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await user.updatePassword(newPassword);
-        _showMessage(context, 'เปลี่ยนรหัสผ่านสำเร็จ');
-        // สามารถนำทางไปยังหน้าที่คุณต้องการหลังจากเปลี่ยนรหัสผ่านเสร็จ
-        // Navigator.popUntil(context, (route) => route.isFirst);
-      }
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      print('อีเมลถูกส่งไปยัง: $email'); // ตรวจสอบ
+      _showMessage(context, 'ลิงก์รีเซ็ตรหัสผ่านถูกส่งไปที่อีเมลของคุณแล้ว');
     } catch (e) {
-      _showMessage(context, 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน: ${e.toString()}');
+      print('Error: ${e.toString()}'); // ดูข้อความข้อผิดพลาด
+      _showMessage(context, 'เกิดข้อผิดพลาด: ${e.toString()}');
     }
   }
 
@@ -39,19 +35,21 @@ class PassThreePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('ตั้งรหัสผ่านใหม่'),
+        title: Text('ลืมรหัสผ่าน'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text('กรุณากรอกรหัสผ่านใหม่:', style: TextStyle(fontSize: 18)),
+            Text('กรุณากรอกอีเมลที่คุณใช้ลงทะเบียน:',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
-            _buildTextField(_newPasswordController, 'รหัสผ่านใหม่'),
+            _buildTextField(_emailController, 'อีเมล'),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => _changePassword(context),
-              child: Text('เปลี่ยนรหัสผ่าน', style: TextStyle(fontSize: 18)),
+              onPressed: () => _resetPassword(context),
+              child: Text('ส่งลิงก์รีเซ็ตรหัสผ่าน',
+                  style: TextStyle(fontSize: 18)),
             ),
           ],
         ),
@@ -62,7 +60,7 @@ class PassThreePage extends StatelessWidget {
   Widget _buildTextField(TextEditingController controller, String label) {
     return TextField(
       controller: controller,
-      obscureText: true,
+      keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),
