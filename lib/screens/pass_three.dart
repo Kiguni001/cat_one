@@ -44,10 +44,10 @@ class ForgotPasswordPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text('กรุณากรอกอีเมลที่คุณใช้ลงทะเบียน:',
+            Text('ลิงก์รีเซ็ตรหัสผ่านจะถูกส่งไปที่ Gmail:',
                 style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
-            _buildTextField(_emailController, 'อีเมล'), // ใช้ฟังก์ชันนี้เพื่อสร้างช่องกรอก Gmail
+            _buildTextField(_emailController, 'Gmail'), // ใช้ฟังก์ชันนี้เพื่อสร้างช่องกรอก Gmail
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _resetPassword(context),

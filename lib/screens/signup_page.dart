@@ -44,7 +44,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _birthdayController = TextEditingController(); // Birthday
+  final TextEditingController _birthdayController =
+      TextEditingController(); // Birthday
   final TextEditingController _ageController = TextEditingController(); // Age
 
   String _selectedStatus = 'นักเรียน'; // ค่าดรอปดาวน์เริ่มต้น
@@ -147,6 +148,19 @@ class _SignupPageState extends State<SignupPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  void _calculateAge(DateTime selectedDate) {
+    final DateTime today = DateTime.now();
+    int age = today.year - selectedDate.year;
+
+    // ตรวจสอบว่าควรลบอายุหรือไม่
+    if (today.month < selectedDate.month ||
+        (today.month == selectedDate.month && today.day < selectedDate.day)) {
+      age--;
+    }
+
+    _ageController.text = age.toString(); // แสดงอายุในช่อง Age
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,7 +199,9 @@ class _SignupPageState extends State<SignupPage> {
             _buildBirthdayField(), // Updated Birthday Field
             SizedBox(height: 20),
             _buildTextField(_ageController, 'Age', Icons.person,
-                keyboardType: TextInputType.number), // Age
+                keyboardType: TextInputType.number,
+                readOnly: true), // เพิ่ม readOnly: true ที่นี่
+
             SizedBox(height: 20),
             _buildStatusDropdown(), // ดรอปดาวน์ Status
             SizedBox(height: 30),
@@ -212,6 +228,7 @@ class _SignupPageState extends State<SignupPage> {
       TextEditingController controller, String label, IconData icon,
       {TextInputType keyboardType = TextInputType.text,
       bool obscureText = false,
+      bool readOnly = false, // เพิ่มตัวแปรนี้
       List<TextInputFormatter>? inputFormatters}) {
     return TextField(
       controller: controller,
@@ -219,6 +236,7 @@ class _SignupPageState extends State<SignupPage> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters, // กำหนด inputFormatter
       style: TextStyle(color: Colors.white),
+      readOnly: readOnly, // ใช้ตัวแปรนี้เพื่อล็อคช่อง
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.white),
         labelText: label,
@@ -248,6 +266,7 @@ class _SignupPageState extends State<SignupPage> {
         if (selectedDate != null) {
           _birthdayController.text =
               '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+          _calculateAge(selectedDate); // คำนวณอายุเมื่อเลือกวันเกิด
         }
       },
       child: AbsorbPointer(
@@ -275,7 +294,7 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildStatusDropdown() {
     return DropdownButtonFormField<String>(
       value: _selectedStatus,
-      items: ['นักเรียน', 'นักศึกษา','ครูผู้สอน', 'อาจารย์'].map((status) {
+      items: ['นักเรียน', 'นักศึกษา', 'ครูผู้สอน', 'อาจารย์'].map((status) {
         return DropdownMenuItem(
           value: status,
           child: Text(status),
@@ -286,8 +305,10 @@ class _SignupPageState extends State<SignupPage> {
           _selectedStatus = value!;
         });
       },
-      style: TextStyle(color: Colors.white), // กำหนดสีขาวให้ข้อความที่แสดงใน dropdown
-      dropdownColor: Colors.cyan[800], // กำหนดพื้นหลังของ dropdown เป็นสี cyan[800]
+      style: TextStyle(
+          color: Colors.white), // กำหนดสีขาวให้ข้อความที่แสดงใน dropdown
+      dropdownColor:
+          Colors.cyan[800], // กำหนดพื้นหลังของ dropdown เป็นสี cyan[800]
       decoration: InputDecoration(
         labelText: 'Status',
         labelStyle: TextStyle(color: Colors.white),
