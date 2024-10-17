@@ -5,6 +5,9 @@ import 'package:sumhua_project/function/groupchat.dart';
 import 'package:sumhua_project/function/user_list_screen.dart';
 import 'package:sumhua_project/function/voice_channel.dart';
 import 'package:sumhua_project/function/settings_page.dart';
+import 'package:sumhua_project/src/pages/index.dart';
+import 'package:sumhua_project/function/login_page.dart';
+
 
 class RoomSlideBar extends StatefulWidget {
   final String menuItemName;
@@ -120,25 +123,44 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
               children: <Widget>[
                 // เพิ่มปุ่ม Chat Friend และ Setting ด้านบนปุ่ม Add Room
                 ListTile(
-                  leading: Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
+                  leading:
+                      Icon(Icons.chat, color: Colors.blue), // ไอคอน Chat Friend
                   title: Text('แชทส่วนตัว'),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UserListScreen(), // เปิดหน้า UserListScreen
+                        builder: (context) =>
+                            UserListScreen(), // เปิดหน้า UserListScreen
                       ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.settings, color: Colors.grey), // ไอคอน Settings
+                  leading: Icon(Icons.settings,
+                      color: Colors.grey), // ไอคอน Settings
                   title: Text('การตั้งค่า'),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SettingsPage(), // เรียกหน้า Settings
+                        builder: (context) =>
+                            SettingsPage(), // เรียกหน้า Settings
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: Icon(Icons.voice_chat,
+                      color: Colors.green), // ไอคอน Voice Chat
+                  title: Text('เข้าห้องแชทเสียง'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            LoginPage(), // นำไปยังหน้า LoginPage
                       ),
                     );
                   },
@@ -159,7 +181,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     children: [
                       Text(
                         'ห้องข้อความ รายการ:',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       ...chatRooms
                           .map((room) => ListTile(
@@ -189,7 +212,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     children: [
                       Text(
                         'ห้องคุยเสียง รายการ:',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       ...audioRooms
                           .map((roomName) => ListTile(
@@ -198,9 +222,8 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => VoiceChannelPage(
-                                        channelId: roomName, // ส่งชื่อห้องที่เลือก
-                                      ),
+                                      builder: (context) =>
+                                          IndexPage(), // นำไปยังหน้า IndexPage
                                     ),
                                   );
                                 },
@@ -315,17 +338,15 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                       'createdAt': Timestamp.now(),
                     });
 
-                    // นำทางไปยัง VoiceChannelPage ที่มีชื่อห้องที่สร้าง
+                    // นำทางไปยัง IndexPage แทน AudioRoom
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => VoiceChannelPage(
-                          channelId: roomName, // ส่งชื่อห้องที่สร้าง
-                        ),
+                        builder: (context) =>
+                            IndexPage(), // นำทางไปที่ IndexPage
                       ),
                     );
                   }
-
                   if (mounted) {
                     Navigator.of(context).pop();
                   }

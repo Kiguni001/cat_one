@@ -1,93 +1,32 @@
-const StreamChat = require("stream-chat").StreamChat;
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
 
-admin.initializeApp();
+// กำหนดค่า Agora App ID และ App Certificate ของคุณ
+const appID = "5801841d64fa4c8aa9f912cd9f6197de";
+const appCertificate = "0db8fca050014b50bee8e1f388591622";
 
-const serverClient = StreamChat.getInstance(
-    functions.config().stream.key,
-    functions.config().stream.secret,
-);
+exports.generateAgoraToken = functions.https.onRequest((req, res) => {
+  const channelName = req.query.channelName;
+  const uid = req.query.uid;
 
-exports.deleteStreamUser = functions.auth.user().onDelete((user, context) => {
-  return serverClient.deleteUser(user.uid);
-});
-
-// Create a Stream user and return auth token.
-exports.createStreamUserAndGetToken =
-functions.https.onCall(async (data, context) => {
-  // Checking that the user is authenticated.
-  if (!context.auth) {
-    // Throwing an HttpsError so that the client gets the error details.
-    throw new functions.https.HttpsError(
-        "failed-precondition",
-        "The function must be called while authenticated.",
-    );
-  } else {
-    try {
-      // Create user using the serverClient.
-      await serverClient.upsertUser({
-        id: context.auth.uid,
-        name: context.auth.token.name,
-        email: context.auth.token.email,
-        image: context.auth.token.image,
-      });
-
-      // Create and return user auth token.
-      return serverClient.createToken(context.auth.uid);
-    } catch (err) {
-      console.error
-      (`Unable to create user with ID ${context.auth.uid}
-         on Stream. Error ${err}`);
-      throw new functions.https.HttpsError
-      ("aborted", "Could not create Stream user");
-    }
+  if (!channelName || !uid) {
+    return res.status(400).send("Channel name and UID are required");
   }
-});
 
-// Get Stream user token.
-exports.getStreamUserToken = functions.https.onCall((data, context) => {
-  // Checking that the user is authenticated.
-  if (!context.auth) {
-    // Throwing an HttpsError so that the client gets the error details.
-    throw new functions.https.HttpsError(
-        "failed-precondition",
-        "The function must be called while authenticated.",
-    );
-  } else {
-    try {
-      return serverClient.createToken(context.auth.uid);
-    } catch (err) {
-      console.error
-      (`Unable to get user token with ID ${context.auth.uid}
-         on Stream. Error ${err}`);
-      // Throwing an HttpsError so that the client gets the error details.
-      throw new functions.https.HttpsError
-      ("aborted", "Could not get Stream user");
-    }
-  }
-});
+  const role = RtcRole.PUBLISHER;
+  const expireTime = 3600; // 1 hour
+  const currentTime = Math.floor(Date.now() / 1000);
+  const privilegeExpireTime = currentTime + expireTime;
 
-// Revoke the authenticated user's Stream chat token.
-exports.revokeStreamUserToken =
-functions.https.onCall((data, context) => {
-  // Checking that the user is authenticated.
-  if (!context.auth) {
-    // Throwing an HttpsError so that the client gets the error details.
-    throw new functions.https.HttpsError(
-        "failed-precondition",
-        "The function must be called while authenticated.",
-    );
-  } else {
-    try {
-      return serverClient.revokeUserToken(context.auth.uid);
-    } catch (err) {
-      console.error
-      (`Unable to revoke user token with ID ${context.auth.uid}
-         on Stream. Error ${err}`);
-      // Throwing an HttpsError so that the client gets the error details.
-      throw new functions.https.HttpsError
-      ("aborted", "Could not get Stream user");
-    }
-  }
+  // สร้าง Token
+  const token = RtcTokenBuilder.buildTokenWithUid(
+    appID,
+    appCertificate,
+    channelName,
+    uid,
+    role,
+    privilegeExpireTime
+  );
+
+  res.json({token: token});
 });

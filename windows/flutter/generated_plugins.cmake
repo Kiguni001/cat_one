@@ -12,13 +12,14 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   firebase_storage
   flutter_webrtc
-  iris_method_channel
   media_kit_video
   permission_handler_windows
   screen_brightness_windows
   share_plus
   thumblr_windows
   url_launcher_windows
+  zego_express_engine
+  zego_zim
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
