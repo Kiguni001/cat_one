@@ -19,6 +19,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    
+
     <application
         android:label="sumhua_project"
         android:name="${applicationName}"

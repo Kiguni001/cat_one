@@ -255,7 +255,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                                 ),
                               ),
                               if (messageData['type'] == 'message')
-                                Text(messageData['content'])
+                                SelectableText(messageData['content'])
                               else if (messageData['type'] == 'image')
                                 GestureDetector(
                                   onTap: () {

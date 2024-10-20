@@ -3,11 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sumhua_project/function/groupchat.dart';
 import 'package:sumhua_project/function/user_list_screen.dart';
-import 'package:sumhua_project/function/voice_channel.dart';
 import 'package:sumhua_project/function/settings_page.dart';
-import 'package:sumhua_project/src/pages/index.dart';
 import 'package:sumhua_project/function/login_page.dart';
-
+import 'package:sumhua_project/function/aa_audio.dart'; // นำเข้า aa_audio.dart
 
 class RoomSlideBar extends StatefulWidget {
   final String menuItemName;
@@ -23,7 +21,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
   late String userId;
   String userRole = '';
   List<Map<String, dynamic>> chatRooms = [];
-  List<String> audioRooms = [];
 
   @override
   void initState() {
@@ -61,17 +58,11 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
         userRole = data?['role'] ?? '';
       }
 
-      // ดึงข้อมูล chatroom และ groupaudioroom
+      // ดึงข้อมูล chatroom
       QuerySnapshot chatroomSnapshot = await FirebaseFirestore.instance
           .collection('classmenuitem')
           .doc(menuItemId)
           .collection('chatroom')
-          .get();
-
-      QuerySnapshot groupaudioroomSnapshot = await FirebaseFirestore.instance
-          .collection('classmenuitem')
-          .doc(menuItemId)
-          .collection('groupaudioroom')
           .get();
 
       if (mounted) {
@@ -81,10 +72,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     'name': doc['name'],
                     'id': doc.id,
                   })
-              .toList();
-
-          audioRooms = groupaudioroomSnapshot.docs
-              .map((doc) => doc['name'] as String)
               .toList();
         });
       }
@@ -151,18 +138,13 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                   },
                 ),
 
+                // เพิ่มปุ่ม "เข้าห้องพูดคุย"
                 ListTile(
-                  leading: Icon(Icons.voice_chat,
+                  leading: Icon(Icons.chat_bubble,
                       color: Colors.green), // ไอคอน Voice Chat
-                  title: Text('เข้าห้องแชทเสียง'),
+                  title: Text('เข้าห้องพูดคุย'),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            LoginPage(), // นำไปยังหน้า LoginPage
-                      ),
-                    );
+                    _showCallDialog(); // เรียกแสดง Dialog เพื่อให้ผู้ใช้กรอก call ID
                   },
                 ),
 
@@ -203,36 +185,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     ],
                   ),
                 ),
-
-                // แสดงผลรายการห้อง Audio Rooms
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ห้องคุยเสียง รายการ:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      ...audioRooms
-                          .map((roomName) => ListTile(
-                                title: Text(roomName),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          IndexPage(), // นำไปยังหน้า IndexPage
-                                    ),
-                                  );
-                                },
-                                trailing: Icon(Icons.volume_up),
-                              ))
-                          .toList(),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
@@ -240,6 +192,49 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
       ),
     );
   }
+
+void _showCallDialog() {
+  final callIDController = TextEditingController(); // ไม่มีค่าเริ่มต้น ให้กรอกเอง
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('เข้าห้องพูดคุย'),
+        content: TextField(
+          controller: callIDController,
+          decoration: InputDecoration(hintText: 'ใส่ Call ID'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('ยกเลิก'),
+          ),
+          TextButton(
+            onPressed: () {
+              final callID = callIDController.text.trim();
+              if (callID.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CallPage(callID: callID), // ส่ง callID ที่ผู้ใช้กรอกไปยัง CallPage
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('กรุณาใส่ Call ID')),
+                );
+              }
+            },
+            child: Text('เข้าห้อง'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _showAddRoomDialog() {
     showDialog(
@@ -255,13 +250,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                 onTap: () {
                   Navigator.of(context).pop();
                   _createRoom('chatroom');
-                },
-              ),
-              ListTile(
-                title: Text('สร้างห้องคุยเสียง'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _createRoom('audioroom');
                 },
               ),
             ],
@@ -284,8 +272,7 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(
-              'สร้าง ${roomType == 'chatroom' ? 'ห้องพูดคุย' : 'ห้องคุยเสียง'}'),
+          title: Text('สร้าง ห้องพูดคุย'),
           content: TextField(
             controller: _nameController,
             decoration: InputDecoration(hintText: "ใส่ชื่อห้อง"),
@@ -311,15 +298,10 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                 }
 
                 try {
-                  final roomCollection = roomType == 'chatroom'
-                      ? FirebaseFirestore.instance
-                          .collection('classmenuitem')
-                          .doc(menuItemId)
-                          .collection('chatroom')
-                      : FirebaseFirestore.instance
-                          .collection('classmenuitem')
-                          .doc(menuItemId)
-                          .collection('groupaudioroom');
+                  final roomCollection = FirebaseFirestore.instance
+                      .collection('classmenuitem')
+                      .doc(menuItemId)
+                      .collection('chatroom');
 
                   DocumentReference newRoomRef = await roomCollection.add({
                     'name': roomName,
@@ -327,26 +309,6 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
                     'userId': userId,
                   });
 
-                  if (roomType == 'audioroom') {
-                    await FirebaseFirestore.instance
-                        .collection('theaudioroom')
-                        .doc(newRoomRef.id) // ใช้ id ของเอกสารที่สร้าง
-                        .set({
-                      'name': roomName,
-                      'userId': userId,
-                      'menuItemId': menuItemId,
-                      'createdAt': Timestamp.now(),
-                    });
-
-                    // นำทางไปยัง IndexPage แทน AudioRoom
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            IndexPage(), // นำทางไปที่ IndexPage
-                      ),
-                    );
-                  }
                   if (mounted) {
                     Navigator.of(context).pop();
                   }

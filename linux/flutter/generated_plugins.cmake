@@ -3,10 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  desktop_drop
+  audioplayers_linux
   file_selector_linux
   flutter_webrtc
-  media_kit_video
   url_launcher_linux
   zego_express_engine
 )
