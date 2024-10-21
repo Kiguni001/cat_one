@@ -193,48 +193,39 @@ class _RoomSlideBarState extends State<RoomSlideBar> {
     );
   }
 
-void _showCallDialog() {
-  final callIDController = TextEditingController(); // ไม่มีค่าเริ่มต้น ให้กรอกเอง
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('เข้าห้องพูดคุย'),
-        content: TextField(
-          controller: callIDController,
-          decoration: InputDecoration(hintText: 'ใส่ Call ID'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('ยกเลิก'),
-          ),
-          TextButton(
-            onPressed: () {
-              final callID = callIDController.text.trim();
-              if (callID.isNotEmpty) {
+  void _showCallDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('เข้าห้องพูดคุย'),
+          content:
+              Text('คุณต้องการเข้าห้องพูดคุยหรือไม่?'), // ไม่ต้องใช้ TextField
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('ยกเลิก'),
+            ),
+            TextButton(
+              onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CallPage(callID: callID), // ส่ง callID ที่ผู้ใช้กรอกไปยัง CallPage
+                    builder: (context) => CallAudio(
+                      userID: userId, // ส่งค่า userId ไปยัง CallAudio
+                    ),
                   ),
                 );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('กรุณาใส่ Call ID')),
-                );
-              }
-            },
-            child: Text('เข้าห้อง'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
+              },
+              child: Text('เข้าห้อง'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showAddRoomDialog() {
     showDialog(

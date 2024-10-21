@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // นำเข้า Firebase Firestore
 
-class CallAudio extends StatelessWidget {
+class CallFriend extends StatelessWidget {
   final String userID; // เพิ่มตัวแปรรับ userID จากภายนอก
 
-  const CallAudio({Key? key, required this.userID}) : super(key: key);
+  const CallFriend({Key? key, required this.userID}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomePage(userID: userID)); // ส่ง userID ไปยัง HomePage
+    return MaterialApp(home: HomeCall(userID: userID)); // ส่ง userID ไปยัง HomeCall
   }
 }
 
-class HomePage extends StatelessWidget {
-  final String userID; // รับ userID จาก CallAudio
+class HomeCall extends StatelessWidget {
+  final String userID; // รับ userID จาก CallFriend
   final callIDTextCtrl = TextEditingController(text: "");
 
-  HomePage({Key? key, required this.userID}) : super(key: key);
+  HomeCall({Key? key, required this.userID}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,21 +34,21 @@ class HomePage extends StatelessWidget {
                 child: TextFormField(
                   controller: callIDTextCtrl,
                   decoration:
-                      const InputDecoration(labelText: "สร้าง ID ของห้อง Audio"),
+                      const InputDecoration(labelText: "สร้าง ID ง่ายๆเพื่อโทรกับเพื่อนของคุณ"),
                 ),
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // ดึงค่า userName จาก Firebase ก่อนที่จะไปหน้า CallPage
+                  // ดึงค่า userName จาก Firebase ก่อนที่จะไปหน้า FriendCallPage
                   String? userName = await getUserNameFromFirebase(userID);
                   if (userName != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) {
-                        return CallPage(
+                        return FriendCallPage(
                           callID: callIDTextCtrl.text,
                           userID: userID,
-                          userName: userName, // ส่งค่า userName ไปยัง CallPage
+                          userName: userName, // ส่งค่า userName ไปยัง FriendCallPage
                         );
                       }),
                     );
@@ -58,7 +58,7 @@ class HomePage extends StatelessWidget {
                     );
                   }
                 },
-                child: const Text("สร้าง"),
+                child: const Text("โทร"),
               )
             ],
           ),
@@ -84,12 +84,12 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class CallPage extends StatelessWidget {
+class FriendCallPage extends StatelessWidget {
   final String callID;
   final String userID; // เพิ่มตัวแปรรับ userID
   final String userName; // เพิ่มตัวแปรรับ userName
 
-  const CallPage(
+  const FriendCallPage(
       {Key? key, required this.callID, required this.userID, required this.userName})
       : super(key: key);
 
@@ -118,3 +118,4 @@ class CallPage extends StatelessWidget {
     );
   }
 }
+

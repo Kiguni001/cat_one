@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart'; // เพิ่ม import สำหรับการคัดลอกข้อความ
+import 'package:sumhua_project/function/callfriend.dart';
 
 class FriendChatPage extends StatefulWidget {
   final String friendName;
@@ -86,6 +87,21 @@ class _FriendChatPageState extends State<FriendChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.friendName),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.call),
+            onPressed: () {
+              // เปิด CallFriend และส่ง userID ไปด้วย
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CallFriend(
+                      userID: widget.friendUID), // ส่ง userID ไปยัง CallFriend
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
