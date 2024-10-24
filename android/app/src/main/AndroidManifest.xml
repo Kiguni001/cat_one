@@ -24,7 +24,7 @@
     <application
         android:label="sumhua_project"
         android:name="${applicationName}"
-        android:icon="@mipmap/ture">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
